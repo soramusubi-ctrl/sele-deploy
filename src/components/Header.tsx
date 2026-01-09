@@ -8,11 +8,11 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
-  const tabs: { id: Tab; label: string; icon: React.ReactElement }[] = [
+  const tabs: { id: Tab; label: string; icon: React.ReactElement; disabled?: boolean }[] = [
     { id: 'create', label: '描く', icon: <PaintBrushIcon /> },
     { id: 'play', label: '遊ぶ', icon: <GameIcon /> },
     { id: 'edit', label: '直す', icon: <WandIcon /> },
-    { id: 'animate', label: '動かす', icon: <FilmIcon /> },
+    { id: 'animate', label: '動かす', icon: <FilmIcon />, disabled: true },
   ];
 
   return (
@@ -26,9 +26,12 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => !tab.disabled && setActiveTab(tab.id)}
+              disabled={tab.disabled}
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ease-out ${
-                activeTab === tab.id
+                tab.disabled
+                  ? 'text-stone-300 cursor-not-allowed opacity-50'
+                  : activeTab === tab.id
                   ? 'bg-rose-100 text-rose-600 shadow-inner'
                   : 'text-stone-400 hover:bg-stone-50 hover:text-stone-600'
               }`}
