@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { generateImage, summarizeConversation, analyzeGuideImage } from '../services/geminiService';
 import type { GuideInfo } from '../services/geminiService';
 import { fileToBase64 } from '../utils/fileUtils';
+import { canGenerate, recordGeneration, getRemainingGenerations } from '../utils/rateLimiter';
 import Button from './Button';
 import Spinner from './Spinner';
 import type { ImageForEditing, CharacterState } from '../App';
@@ -216,6 +217,13 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         return;
     }
 
+    // 使用制限チェック
+    const limitCheck = canGenerate();
+    if (!limitCheck.allowed) {
+        setError(limitCheck.reason || "生成できません。");
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     setGuideInfo(null);
@@ -276,6 +284,9 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         const base64 = await generateImage(finalPrompt, activeCharacters, aspect, useProModel, resolution, angle);
         const imageUrl = `data:image/png;base64,${base64}`;
         setGeneratedImage(imageUrl);
+        
+        // 生成成功時に使用回数を記録
+        recordGeneration();
 
         if (style === 'instruction-manual') {
             setIsAnalyzing(true);
@@ -452,9 +463,14 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             )}
           </div>
 
-          <Button onClick={handleGenerate} isLoading={isLoading} disabled={!prompt || (useProModel && !hasApiKey)} className="w-full py-6 text-xl rounded-full bg-rose-200 hover:bg-rose-300 text-rose-600 shadow-lg border-none transition-all active:scale-95">
-            🖌️ 描き起こす
-          </Button>
+          <div className="space-y-2">
+            <div className="text-center text-xs text-stone-400">
+              本日の残り生成回数: {getRemainingGenerations()}回
+            </div>
+            <Button onClick={handleGenerate} isLoading={isLoading} disabled={!prompt || (useProModel && !hasApiKey)} className="w-full py-6 text-xl rounded-full bg-rose-200 hover:bg-rose-300 text-rose-600 shadow-lg border-none transition-all active:scale-95">
+              🖌️ 描き起こす
+            </Button>
+          </div>
         </div>
 
         {/* Result Area */}
