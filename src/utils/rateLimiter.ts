@@ -1,6 +1,6 @@
 // 使用制限のためのユーティリティ
 
-const STORAGE_KEY = 'quiet_atelier_usage';
+const STORAGE_KEY_PREFIX = 'quiet_atelier_usage';
 const MAX_DAILY_GENERATIONS = 10;
 const COOLDOWN_SECONDS = 5;
 
@@ -16,10 +16,15 @@ const getTodayString = (): string => {
   return today.toISOString().split('T')[0];
 };
 
+// ストレージキーを生成
+const getStorageKey = (type: 'generate' | 'edit'): string => {
+  return `${STORAGE_KEY_PREFIX}_${type}`;
+};
+
 // ローカルストレージから使用状況を取得
-const getUsageData = (): UsageData => {
+const getUsageData = (type: 'generate' | 'edit' = 'generate'): UsageData => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(getStorageKey(type));
     if (!stored) {
       return {
         date: getTodayString(),
@@ -50,9 +55,9 @@ const getUsageData = (): UsageData => {
 };
 
 // 使用状況を保存
-const saveUsageData = (data: UsageData): void => {
+const saveUsageData = (data: UsageData, type: 'generate' | 'edit' = 'generate'): void => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(getStorageKey(type), JSON.stringify(data));
   } catch (error) {
     console.error('Failed to save usage data:', error);
   }
@@ -100,6 +105,37 @@ export const recordGeneration = (): void => {
 
 // 残り回数を取得
 export const getRemainingGenerations = (): number => {
-  const data = getUsageData();
+  const data = getUsageData('generate');
+  return Math.max(0, MAX_DAILY_GENERATIONS - data.count);
+};
+
+// 汎用的なレート制限チェック
+export const checkRateLimit = (type: 'generate' | 'edit'): boolean => {
+  const data = getUsageData(type);
+  
+  // 1日の上限チェック
+  if (data.count >= MAX_DAILY_GENERATIONS) {
+    return false;
+  }
+  
+  // クールダウンチェック
+  const now = Date.now();
+  const timeSinceLastGeneration = (now - data.lastGenerationTime) / 1000;
+  
+  if (timeSinceLastGeneration < COOLDOWN_SECONDS) {
+    return false;
+  }
+  
+  // 使用回数を記録
+  data.count += 1;
+  data.lastGenerationTime = Date.now();
+  saveUsageData(data, type);
+  
+  return true;
+};
+
+// 汎用的な残り回数取得
+export const getRemainingCount = (type: 'generate' | 'edit'): number => {
+  const data = getUsageData(type);
   return Math.max(0, MAX_DAILY_GENERATIONS - data.count);
 };

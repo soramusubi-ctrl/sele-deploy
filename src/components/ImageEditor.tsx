@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { editImage } from '../services/geminiService';
 import { fileToBase64 } from '../utils/fileUtils';
+import { checkRateLimit, getRemainingCount } from '../utils/rateLimiter';
 import Card from './Card';
 import Button from './Button';
 import Spinner from './Spinner';
@@ -129,6 +130,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ imageToEdit, onEditingComplet
     const [brightness, setBrightness] = useState<number>(100);
     const [useProModel, setUseProModel] = useState<boolean>(false);
     const [hasApiKey, setHasApiKey] = useState<boolean>(false);
+    const [remainingEdits, setRemainingEdits] = useState<number>(getRemainingCount('edit'));
 
     useEffect(() => {
         if (imageToEdit) {
@@ -187,6 +189,11 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ imageToEdit, onEditingComplet
             return;
         }
 
+        if (!checkRateLimit('edit')) {
+            setError('本日の編集回数上限（10回）に達しました。明日またお試しください。');
+            return;
+        }
+
         const baseLayer = layers.find(l => l.isVisible && l.imageBase64);
         const baseImage = baseLayer ? { base64: baseLayer.imageBase64, mimeType: originalImage.mimeType } : { base64: originalImage.base64, mimeType: originalImage.mimeType };
 
@@ -209,6 +216,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ imageToEdit, onEditingComplet
         try {
             const resultBase64 = await editImage(prompt, baseImage.base64, baseImage.mimeType, useProModel);
             setLayers(prev => prev.map(l => l.id === newLayer.id ? { ...l, imageBase64: resultBase64, isLoading: false } : l));
+            setRemainingEdits(getRemainingCount('edit'));
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : '編集中にエラーが発生しました。';
             setError(errorMessage);
@@ -333,6 +341,10 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ imageToEdit, onEditingComplet
                                 <button onClick={handleSelectKey} className="text-rose-500 font-bold underline">APIキーを選択</button>
                             </div>
                         )}
+                    </div>
+
+                    <div className="text-center text-sm text-stone-500 mb-2">
+                        本日の残り編集回数: <span className="font-bold text-rose-500">{remainingEdits}回</span>
                     </div>
 
                     <Button onClick={handleAddLayer} isLoading={isLoading} disabled={!prompt || !originalImage || isLoading || (useProModel && !hasApiKey)} className="w-full py-3 shadow-lg" icon={<PlusIcon/>}>
