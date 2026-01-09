@@ -100,7 +100,7 @@ interface ImageGeneratorProps {
   onStartAnimating: (image: ImageForEditing) => void;
 }
 
-const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCharacters, onStartEditing, onStartAnimating }) => {
+const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCharacters, onStartEditing, onStartAnimating: _onStartAnimating }) => {
   const [prompt, setPrompt] = useState<string>('');
   const [log, setLog] = useState<string>('');
   const [style, setStyle] = useState<string>(mode === 'create' ? 'anime' : 'plushie');
@@ -542,7 +542,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                   <button onClick={() => onStartEditing({ url: generatedImage, base64: generatedImage.split(',')[1], mimeType: 'image/png' })} className="px-6 py-3 bg-white rounded-full shadow-md text-rose-500 text-sm font-bold hover:scale-105 transition-all">
                     描き直す
                   </button>
-                  <button onClick={() => onStartAnimating({ url: generatedImage, base64: generatedImage.split(',')[1], mimeType: 'image/png' })} className="px-6 py-3 bg-white rounded-full shadow-md text-rose-500 text-sm font-bold hover:scale-105 transition-all">
+                  <button disabled className="px-6 py-3 bg-gray-200 rounded-full shadow-md text-gray-400 text-sm font-bold cursor-not-allowed opacity-50">
                     アニメ化
                   </button>
                 </div>
