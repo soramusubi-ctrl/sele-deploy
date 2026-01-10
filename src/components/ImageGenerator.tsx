@@ -243,39 +243,43 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             Professional high-end photography, 8k resolution, realistic human skin texture, natural lighting, cinematic mood.`;
         } else if (style === 'plushie') {
             const charNames = activeCharacters.map(c => `「${c.name}」`).join('や');
-            finalPrompt = `${charNames ? `${charNames}をモデルにした、` : ''}最高品質で愛らしい「ぬいぐるみ（Plushie）」を生成してください。
-            【瞳の表現】：ボタンではなく、うるうるとした透明感のある「グラスアイ」または「プラスチックアイ」を使用してください。瞳の奥には光の反射（キャッチライト）があり、生命感と可愛らしさを強調します。
-            【素材の質感】：思わず触れたくなるような、ふかふかのボア生地や高品質なモヘアの質感。非常に細かく柔らかな毛並み。
-            【ディテール】：丁寧な手縫いのステッチ、小さな肉球の刺繍、リボンなどのアクセサリー。
-            【雰囲気】：情景（${prompt}）に基づいた、温かみのあるライティングと、柔らかなクッションに囲まれたような心地よい構図。
+            finalPrompt = `Create an adorable high-quality plushie ${charNames ? `modeled after ${charNames}` : ''}.
+            [Eyes]: Use glistening transparent "glass eyes" or "plastic eyes" instead of buttons. The eyes should have light reflections (catchlight) to emphasize liveliness and cuteness.
+            [Material texture]: Fluffy boa fabric or high-quality mohair texture that makes you want to touch it. Very fine and soft fur.
+            [Details]: Carefully hand-stitched seams, small embroidered paw pads, accessories like ribbons.
+            [Atmosphere]: Based on the scene (${prompt}), warm lighting and a cozy composition surrounded by soft cushions.
             High quality, intricate plush texture, glistening glass eyes, warm and cozy aesthetic, high resolution.`;
         } else if (style === 'instruction-manual') {
-            finalPrompt = `「${prompt}」のシーンを、日本のレトロなゲーム攻略本（公式設定資料集）の1ページとして描いてください。
-            【構成】：左側にキャラクターの立ち絵。右側には、魔法のアイテムや武器、不思議な道具などのアイコンが3つほど整然と並んでいます。
-            【デザイン】：下部にはHPやMP、ATKなどの数値が書かれたステータスウィンドウ。全体的に1990年代の高品質な2Dデジタルペイントスタイルで、印刷された紙の質感が少しあります。`;
+            finalPrompt = `Create a page from a Japanese retro game strategy guide (official art book) depicting the scene: "${prompt}".
+            [Layout]: Character standing pose on the left side. On the right side, about 3 icons of magical items, weapons, or mysterious tools are neatly arranged.
+            [Design]: At the bottom, a status window with numerical values like HP, MP, ATK. Overall high-quality 2D digital paint style from the 1990s, with a slight printed paper texture.
+            Retro game manual aesthetic, 1990s digital art, official character design sheet.`;
         } else if (style === 'picture-book') {
             const charNames = activeCharacters.map(c => `「${c.name}」`).join('と');
-            finalPrompt = `木の机の上に置かれた、物語の核心を突く美しい絵本の見開きページ。
-            【左ページ】：情景（${prompt}）に基づいた、優しく語りかけるような「手書き風の日本語テキスト（縦書きまたは横書き）」が配置されている。
-            【右ページ】：最高品質の水彩画タッチで描かれた、「${prompt}」の幻想的な挿絵。${charNames ? `登場人物の${charNames}が、物語の役割に応じたポーズで生き生きと描かれている。` : ''}
-            【質感とライティング】：古い良質な紙の繊維感、わずかな紙のしわ。窓からの柔らかな木漏れ日がページに落ち、空気中の塵が光り輝いている。 cinematic lighting, masterpieces of children's book illustration, emotional and cozy atmosphere.`;
+            finalPrompt = `A beautiful picture book spread placed on a wooden desk, capturing the heart of the story.
+            [Left page]: Handwritten-style English text (horizontal layout) gently narrating the scene based on: ${prompt}.
+            [Right page]: A fantastical illustration of "${prompt}" drawn in the highest quality watercolor style. ${charNames ? `Characters ${charNames} are vividly depicted in poses appropriate to their story roles.` : ''}
+            [Texture and lighting]: Old quality paper fiber texture, slight paper wrinkles. Soft sunlight filtering through a window falls on the pages, with dust particles glittering in the air.
+            Cinematic lighting, masterpiece children's book illustration, emotional and cozy atmosphere, high resolution.`;
         } else if (style === 'manga') {
             const charNames = activeCharacters.map(c => `「${c.name}」`).join('や');
-            finalPrompt = `「${prompt}」というストーリーを、日本の伝統的な「4コマ漫画（Yonkoma Manga）」形式で描いてください。
-            【構成】：縦に4つのコマが整然と並んだレイアウト。
-            1コマ目（起）：物語の導入、日常。
-            2コマ目（承）：事件の発生。
-            3コマ目（転）：意外な展開、あるいはボケ。
-            4コマ目（結）：結末、あるいはツッコミ。
-            【ビジュアル】：プロの漫画家による高品質なモノクロ線画とスクリーントーン。${charNames ? `${charNames}が各コマで豊かな表情を見せている。` : ''}
-            【演出】：セリフ吹き出し、漫符（！、？、汗など）、日本語のオノマトペ（ドキドキ、バーンなど）。 Japanese Manga Style.`;
+            finalPrompt = `Create a traditional Japanese "4-panel manga (Yonkoma)" depicting the story: "${prompt}".
+            [Layout]: Four panels arranged vertically in an orderly manner.
+            Panel 1 (Introduction): Story setup, daily life.
+            Panel 2 (Development): An incident occurs.
+            Panel 3 (Twist): Unexpected development or joke.
+            Panel 4 (Conclusion): Ending or punchline.
+            [Visual]: High-quality monochrome line art and screen tones by professional manga artists. ${charNames ? `${charNames} show rich expressions in each panel.` : ''}
+            [Direction]: Speech bubbles, manga symbols (!, ?, sweat drops, etc.), English onomatopoeia.
+            Japanese Manga Style, 4-koma format, black and white.`;
         } else if (style === 'sns-icons-12') {
             const charNames = activeCharacters.map(c => `「${c.name}」`).join('や');
-            finalPrompt = `SNS用の円形アイコン素材12種類のセットを、1枚の画像に3x4のグリッド形式で描いてください。
-            【被写体】：${charNames ? `${charNames}をモデルにした` : ''}可愛い「ちびキャラ（2頭身）」のバストアップ。
-            【多様な服装】：12個のアイコンはすべて異なる衣装（私服、和服、騎士、メイド、パジャマ、制服、サイバー、ゴスロリ、ヒーロー、魔法使い、着ぐるみ、タキシード）を着せてください。
-            【構成】：各アイコンは円形のパステルカラー背景に収まっており、切り抜きやすいデザイン。
-            【タッチ】：太い主線とはっきりした塗りの日本のアニメ風アイコンスタイル. Vibrant digital art, cute chibi avatar collection.`;
+            finalPrompt = `Create a set of 12 circular SNS icon materials in a 3x4 grid format on a single image.
+            [Subject]: Cute "chibi character (2-head-tall)" bust-up ${charNames ? `modeled after ${charNames}` : ''}.
+            [Diverse outfits]: All 12 icons should wear different costumes (casual wear, kimono, knight, maid, pajamas, uniform, cyber, gothic lolita, hero, wizard, mascot costume, tuxedo).
+            [Composition]: Each icon fits within a circular pastel-colored background, with an easy-to-cut design.
+            [Style]: Japanese anime-style icon with thick outlines and clear coloring.
+            Vibrant digital art, cute chibi avatar collection, 3x4 grid layout.`;
         } else {
             const styleLabel = predefinedStyles.find(s => s.value === style)?.label;
             finalPrompt += `\nタッチ: ${styleLabel}`;
