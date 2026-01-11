@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+  import React, { useState, useEffect, useRef } from 'react';
 import { 
     PhotoIcon, 
     SparklesIcon, 
@@ -272,7 +272,6 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         const imageUrl = `data:image/png;base64,${base64}`;
         setGeneratedImage(imageUrl);
         
-        // 生成成功時に使用回数を記録
         recordGeneration();
 
         if (style === 'instruction-manual') {
@@ -296,174 +295,175 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
   const filteredStyles = predefinedStyles.filter(s => s.mode === mode || s.mode === 'both');
   const activeCharacters = characters.filter(c => c.isActive);
 
+  const StepHeader = ({ num, title, sub }: { num: number, title: string, sub?: string }) => (
+    <div className="flex items-center justify-between mb-4">
+        <div className="flex items-baseline space-x-2">
+            <span className="text-[10px] font-bold text-rose-400 tracking-widest uppercase">STEP {num} :</span>
+            <h3 className="text-sm font-bold text-rose-400">{title}</h3>
+        </div>
+        {sub && <span className="text-[10px] text-stone-300 italic">{sub}</span>}
+    </div>
+  );
+
+  const Card = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
+    <div className={`bg-white rounded-[2.5rem] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-stone-50/50 ${className}`}>
+        {children}
+    </div>
+  );
+
   return (
-    <div className="max-w-4xl mx-auto space-y-12 pb-24">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-stone-700">
-            {mode === 'create' ? '空想を書き起こす' : '物語で遊ぶ'}
-        </h1>
-        <p className="text-stone-400">
-            {mode === 'create' ? '日常から冒険への扉を開きます。' : '特別なレイアウトや材質で物語を楽しみましょう。'}
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#fdfaf7] px-4 py-12">
+      <div className="max-w-6xl mx-auto space-y-12">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold text-stone-700 tracking-tight">
+              {mode === 'create' ? '空想を書き起こす' : '物語で遊ぶ'}
+          </h1>
+          <p className="text-stone-400 italic text-sm font-light">
+              Quiet Atelier - Storytelling Through Vision
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-8">
-        <div className="space-y-10">
-          {/* Step 1: 視点を決める */}
-          <section className="space-y-4">
-            <div className="flex items-center space-x-2 pl-2">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-500 text-[10px] font-bold">1</span>
-                <h3 className="text-sm font-bold text-stone-700">視点を決める</h3>
-            </div>
-            <div className="flex flex-wrap gap-1.5 px-2">
-                {angleOptions.map((opt) => (
-                    <button
-                        key={opt.value}
-                        onClick={() => setAngle(opt.value)}
-                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
-                            angle === opt.value 
-                            ? 'bg-rose-400 border-rose-400 text-white shadow-sm' 
-                            : 'bg-white border-stone-200 text-stone-400 hover:border-rose-200'
-                        }`}
-                    >
-                        <span className="mr-1">{opt.icon}</span>
-                        {opt.label}
-                    </button>
-                ))}
-            </div>
-          </section>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-12 items-start">
+          <div className="space-y-6">
+            {/* Step 1: 視点を決める */}
+            <Card>
+              <StepHeader num={1} title="視点を決める" />
+              <div className="flex flex-wrap gap-2">
+                  {angleOptions.map((opt) => (
+                      <button
+                          key={opt.value}
+                          onClick={() => setAngle(opt.value)}
+                          className={`flex items-center space-x-2 px-4 py-2 rounded-full text-[11px] font-bold transition-all ${
+                              angle === opt.value 
+                              ? 'bg-rose-400 text-white shadow-md' 
+                              : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
+                          }`}
+                      >
+                          <span>{opt.icon}</span>
+                          <span>{opt.label}</span>
+                      </button>
+                  ))}
+              </div>
+            </Card>
 
-          {/* Step 2: 物語を紡ぐ */}
-          <section className="space-y-4">
-            <div className="flex items-center space-x-2 pl-2">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-500 text-[10px] font-bold">2</span>
-                <h3 className="text-sm font-bold text-stone-700">物語を紡ぐ</h3>
-            </div>
-            <div className="bg-stone-50/50 rounded-[2rem] p-4 border-2 border-stone-100 border-dashed space-y-3">
-              <textarea 
-                value={log} 
-                onChange={(e) => setLog(e.target.value)} 
-                placeholder="会話や日記のログをここに貼ると要約できます..." 
-                className="w-full h-16 bg-white rounded-xl p-3 text-xs text-stone-500 border border-stone-100 outline-none resize-none" 
-              />
-              <button 
-                onClick={handleSummarize} 
-                disabled={isSummarizing || !log} 
-                className="w-full py-2 bg-white border-2 border-rose-100 rounded-full text-rose-400 text-xs font-bold hover:bg-rose-50 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
-              >
-                {isSummarizing ? <Spinner size="sm" /> : <WandIcon />}
-                <span>ログからシーンを生成</span>
-              </button>
-            </div>
-          </section>
-
-          {/* Step 3: 画材を揃える */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between pl-2">
-                <div className="flex items-center space-x-2">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-500 text-[10px] font-bold">3</span>
-                    <h3 className="text-sm font-bold text-stone-700">画材を揃える</h3>
-                </div>
-                <button onClick={handleAddCharacter} className="flex items-center space-x-2 px-3 py-1.5 bg-white border border-stone-100 rounded-full text-rose-400 text-xs font-bold shadow-sm hover:shadow-md transition-all">
-                    <UserPlusIcon className="w-3 h-3" />
-                    <span>追加</span>
+            {/* Step 2: 物語を紡ぐ */}
+            <Card>
+              <StepHeader num={2} title="物語を紡ぐ" />
+              <div className="space-y-4">
+                <textarea 
+                  value={log} 
+                  onChange={(e) => setLog(e.target.value)} 
+                  placeholder="心に残った会話や、日記の断片をここに..." 
+                  className="w-full h-24 bg-stone-50 rounded-2xl p-4 text-xs text-stone-600 outline-none resize-none placeholder:text-stone-300" 
+                />
+                <button 
+                  onClick={handleSummarize} 
+                  disabled={isSummarizing || !log} 
+                  className="w-full py-3 bg-white border border-rose-100 rounded-full text-rose-400 text-[11px] font-bold hover:bg-rose-50 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                >
+                  {isSummarizing ? <Spinner size="sm" /> : <WandIcon />}
+                  <span>ログからシーンを要約</span>
                 </button>
-            </div>
-            <div className="min-h-[80px] border-2 border-stone-100 border-dashed rounded-[2rem] p-4 bg-stone-50/30 flex flex-wrap gap-2">
-              {characters.map(char => (
-                <div key={char.id} className={`flex items-center p-1 rounded-full border transition-all ${char.isActive ? 'bg-rose-50 border-rose-200' : 'bg-white border-stone-100 opacity-60'}`}>
-                  <label className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden cursor-pointer border border-white shadow-sm">
-                    {char.images[0] ? <img src={char.images[0].url} className="w-full h-full object-cover" /> : <span className="text-stone-300 text-xs">+</span>}
-                    <input type="file" className="hidden" onChange={(e) => handleFileChange(e, char.id)} />
-                  </label>
-                  <input value={char.name} onChange={(e) => setCharacters(prev => prev.map(c => c.id === char.id ? {...c, name: e.target.value} : c))} className="ml-2 w-16 text-[10px] font-bold text-stone-700 outline-none bg-transparent" />
-                  <button onClick={() => toggleCharacterActive(char.id)} className={`ml-2 w-4 h-4 rounded flex items-center justify-center ${char.isActive ? 'bg-rose-400 text-white' : 'bg-stone-200 text-white'}`}><CheckIcon className="w-2.5 h-2.5" /></button>
-                </div>
-              ))}
-            </div>
-          </section>
+              </div>
+            </Card>
 
-          {/* Step 4: 下書きを描く */}
-          <section className="space-y-4">
-            <div className="flex items-center space-x-2 pl-2">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-500 text-[10px] font-bold">4</span>
-                <h3 className="text-sm font-bold text-stone-700">下書きを描く</h3>
-            </div>
-            <div className="bg-white rounded-[2rem] p-6 border-2 border-stone-100 shadow-sm focus-within:border-rose-200 transition-all space-y-4">
-              <div className="flex flex-wrap gap-2 items-center">
-                {activeCharacters.map(char => (
-                    <button
-                        key={char.id}
-                        onClick={() => insertCharacterToPrompt(char.name)}
-                        className="flex items-center space-x-1.5 px-2.5 py-1 bg-stone-50 hover:bg-rose-100 rounded-full border border-stone-100 hover:border-rose-200 transition-all group"
-                    >
-                        <div className="w-4 h-4 rounded-full overflow-hidden bg-stone-200 border border-white">
-                            {char.images[0] && <img src={char.images[0].url} className="w-full h-full object-cover" />}
-                        </div>
-                        <span className="text-[10px] font-bold text-stone-600 group-hover:text-rose-500">{char.name}</span>
-                    </button>
+            {/* Step 3: 画材を揃える */}
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-baseline space-x-2">
+                    <span className="text-[10px] font-bold text-rose-400 tracking-widest uppercase">STEP 3 :</span>
+                    <h3 className="text-sm font-bold text-rose-400">画材を揃える</h3>
+                </div>
+                <button onClick={handleAddCharacter} className="flex items-center space-x-2 text-rose-400 hover:opacity-70 transition-all">
+                    <UserPlusIcon className="w-4 h-4" />
+                    <span className="text-[11px] font-bold">追加</span>
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {characters.map(char => (
+                  <div key={char.id} className={`flex items-center p-1.5 rounded-full border transition-all ${char.isActive ? 'bg-rose-50 border-rose-100' : 'bg-white border-stone-100 opacity-60'}`}>
+                    <label className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden cursor-pointer border-2 border-white shadow-sm">
+                      {char.images[0] ? <img src={char.images[0].url} className="w-full h-full object-cover" /> : <span className="text-stone-300 text-xs">+</span>}
+                      <input type="file" className="hidden" onChange={(e) => handleFileChange(e, char.id)} />
+                    </label>
+                    <input value={char.name} onChange={(e) => setCharacters(prev => prev.map(c => c.id === char.id ? {...c, name: e.target.value} : c))} className="ml-2 w-20 text-[11px] font-bold text-stone-700 outline-none bg-transparent" />
+                    <button onClick={() => toggleCharacterActive(char.id)} className={`ml-2 w-5 h-5 rounded-full flex items-center justify-center ${char.isActive ? 'bg-rose-400 text-white' : 'bg-stone-200 text-white'}`}><CheckIcon className="w-3 h-3" /></button>
+                  </div>
                 ))}
               </div>
-              <textarea 
-                ref={promptRef} 
-                value={prompt} 
-                onChange={(e) => setPrompt(e.target.value)} 
-                placeholder="情景を言葉にしてください..." 
-                className="w-full h-32 text-stone-700 bg-transparent outline-none resize-none placeholder:text-stone-300 text-base leading-relaxed" 
-              />
-            </div>
-          </section>
+            </Card>
 
-          {/* Step 5: 筆致を選ぶ */}
-          <section className="space-y-4">
-            <div className="flex items-center space-x-2 pl-2">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-500 text-[10px] font-bold">5</span>
-                <h3 className="text-sm font-bold text-stone-700">筆致を選ぶ</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3">
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider pl-1">画風</p>
-                    <div className="grid grid-cols-1 gap-1.5">
-                        {filteredStyles.map(s => (
-                            <button key={s.value} onClick={() => setStyle(s.value)} className={`p-2 rounded-xl border text-[10px] font-bold transition-all ${style === s.value ? 'border-rose-300 bg-rose-50 text-rose-500 shadow-sm' : 'border-stone-100 bg-white text-stone-500'}`}>
-                                {s.label}
-                            </button>
-                        ))}
-                    </div>
+            {/* Step 4: 下書きを描く */}
+            <Card>
+              <StepHeader num={4} title="下書きを描く" />
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {activeCharacters.map(char => (
+                      <button
+                          key={char.id}
+                          onClick={() => insertCharacterToPrompt(char.name)}
+                          className="flex items-center space-x-2 px-3 py-1.5 bg-stone-50 hover:bg-rose-50 rounded-full border border-stone-100 transition-all group"
+                      >
+                          <div className="w-5 h-5 rounded-full overflow-hidden bg-stone-200 border border-white">
+                              {char.images[0] && <img src={char.images[0].url} className="w-full h-full object-cover" />}
+                          </div>
+                          <span className="text-[10px] font-bold text-stone-500 group-hover:text-rose-400">{char.name}</span>
+                      </button>
+                  ))}
                 </div>
-                <div className="space-y-3">
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider pl-1">比率</p>
-                    <div className="flex flex-col space-y-1.5">
-                        {[
-                            { value: '1:1', label: '正方形', icon: <SquareIcon /> },
-                            { value: '16:9', label: '横長', icon: <LandscapeIcon /> },
-                            { value: '9:16', label: '縦長', icon: <PortraitIcon /> }
-                        ].map((item) => (
-                            <button
-                                key={item.value}
-                                onClick={() => setAspect(item.value as any)}
-                                className={`flex items-center space-x-3 p-2 rounded-xl border transition-all ${aspect === item.value ? 'bg-rose-50 border-rose-300 text-rose-500 shadow-sm' : 'bg-white border-stone-100 text-stone-400 hover:border-rose-200'}`}
-                            >
-                                {item.icon}
-                                <span className="text-[10px] font-bold">{item.label}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-          </section>
+                <textarea 
+                  ref={promptRef} 
+                  value={prompt} 
+                  onChange={(e) => setPrompt(e.target.value)} 
+                  placeholder="描きたい情景の、具体的な筆致をここに..." 
+                  className="w-full h-32 text-stone-700 bg-transparent outline-none resize-none placeholder:text-stone-200 text-sm leading-relaxed" 
+                />
+              </div>
+            </Card>
 
-          {/* Step 6: 仕上げる */}
-          <section className="space-y-6">
-            <div className="flex items-center space-x-2 pl-2">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-500 text-[10px] font-bold">6</span>
-                <h3 className="text-sm font-bold text-stone-700">仕上げる</h3>
-            </div>
-            
-            <div className="p-5 bg-gradient-to-br from-stone-50 to-rose-50/30 rounded-[2rem] border-2 border-stone-100 space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-white rounded-full text-rose-400 shadow-sm border border-rose-50"><DiamondIcon /></div>
+            {/* Step 5: 筆致を選ぶ */}
+            <Card>
+              <StepHeader num={5} title="筆致を選ぶ" />
+              <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                      <p className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">Style</p>
+                      <div className="grid grid-cols-1 gap-2">
+                          {filteredStyles.map(s => (
+                              <button key={s.value} onClick={() => setStyle(s.value)} className={`p-2.5 rounded-xl border text-[11px] font-bold transition-all ${style === s.value ? 'border-rose-200 bg-rose-50 text-rose-500 shadow-sm' : 'border-stone-100 bg-white text-stone-400'}`}>
+                                  {s.label}
+                              </button>
+                          ))}
+                      </div>
+                  </div>
+                  <div className="space-y-3">
+                      <p className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">Aspect</p>
+                      <div className="flex flex-col space-y-2">
+                          {[
+                              { value: '1:1', label: '正方形', icon: <SquareIcon /> },
+                              { value: '16:9', label: '横長', icon: <LandscapeIcon /> },
+                              { value: '9:16', label: '縦長', icon: <PortraitIcon /> }
+                          ].map((item) => (
+                              <button
+                                  key={item.value}
+                                  onClick={() => setAspect(item.value as any)}
+                                  className={`flex items-center space-x-4 p-2.5 rounded-xl border transition-all ${aspect === item.value ? 'bg-rose-50 border-rose-200 text-rose-500 shadow-sm' : 'bg-white border-stone-100 text-stone-400'}`}
+                              >
+                                  {item.icon}
+                                  <span className="text-[11px] font-bold">{item.label}</span>
+                              </button>
+                          ))}
+                      </div>
+                  </div>
+              </div>
+            </Card>
+
+            {/* Step 6: 仕上げる */}
+            <Card className="bg-gradient-to-br from-white to-rose-50/30">
+              <StepHeader num={6} title="仕上げる" />
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-white/50 rounded-3xl border border-white shadow-sm">
+                    <div className="flex items-center space-x-4">
+                        <div className="p-2.5 bg-rose-400 rounded-full text-white shadow-md"><DiamondIcon /></div>
                         <div>
                             <h3 className="text-xs font-bold text-stone-700">プロモード</h3>
                             <p className="text-[10px] text-stone-400">高画質モデル / 解像度選択</p>
@@ -471,22 +471,20 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" className="sr-only peer" checked={useProModel} onChange={(e) => setUseProModel(e.target.checked)} disabled={isLoading}/>
-                        <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-400"></div>
+                        <div className="w-12 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-400"></div>
                     </label>
                 </div>
 
                 {useProModel && (
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-4">
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                         {!hasApiKey ? (
-                            <div className="flex flex-col items-center py-2">
-                                <button onClick={handleSelectKey} className="px-6 py-2 bg-white border-2 border-rose-100 rounded-full text-rose-400 text-[10px] font-bold hover:shadow-md transition-all">
-                                    APIキーを選択
-                                </button>
-                            </div>
+                            <button onClick={handleSelectKey} className="w-full py-3 bg-white border border-rose-100 rounded-full text-rose-400 text-[11px] font-bold hover:shadow-md transition-all">
+                                APIキーを選択
+                            </button>
                         ) : (
-                            <div className="pt-3 border-t border-stone-100 flex space-x-2">
+                            <div className="flex space-x-2">
                                 {['1K', '2K', '4K'].map((res) => (
-                                    <button key={res} onClick={() => setResolution(res as any)} className={`flex-1 py-2 rounded-xl text-[10px] font-bold transition-all border ${resolution === res ? 'bg-rose-400 border-rose-400 text-white shadow-md' : 'bg-white border-stone-200 text-stone-400'}`}>
+                                    <button key={res} onClick={() => setResolution(res as any)} className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all border ${resolution === res ? 'bg-rose-400 border-rose-400 text-white shadow-md' : 'bg-white border-stone-200 text-stone-400'}`}>
                                         {res}
                                     </button>
                                 ))}
@@ -494,103 +492,110 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                         )}
                     </div>
                 )}
-            </div>
 
-            <div className="space-y-3">
-                <div className="text-center text-[10px] font-bold text-stone-300 tracking-widest uppercase">
-                    Remaining: {getRemainingGenerations()} / 10
-                </div>
-                <Button 
-                    onClick={handleGenerate} 
-                    isLoading={isLoading} 
-                    disabled={!prompt || (useProModel && !hasApiKey)} 
-                    className="w-full py-8 text-xl rounded-[2rem] bg-rose-200 hover:bg-rose-300 text-rose-600 shadow-xl border-none transition-all active:scale-[0.98] font-bold"
-                >
-                    🖌️ 描き起こす
-                </Button>
-                {error && <p className="text-center text-xs text-rose-400 font-bold animate-pulse">{error}</p>}
-            </div>
-          </section>
-        </div>
-
-        {/* Result Area */}
-        <div className="space-y-6">
-          <div className="bg-stone-100 rounded-[3rem] p-4 min-h-[500px] flex flex-col items-center justify-center border-8 border-white shadow-2xl overflow-hidden relative">
-            {isLoading ? (
-              <div className="text-center space-y-4">
-                <Spinner size="lg" className="text-rose-300 mx-auto" />
-                <p className="text-stone-400 font-bold animate-pulse">物語の断片を紡いでいます...</p>
-              </div>
-            ) : generatedImage ? (
-              <div className="w-full flex flex-col items-center animate-in fade-in duration-700">
-                <img src={generatedImage} alt="Generated" className="w-full h-auto rounded-[2rem] shadow-md mb-4" />
-                
-                {(guideInfo || isAnalyzing) && (
-                    <div className="w-full bg-[#1e1e2e] text-[#e0def4] p-5 rounded-[2rem] border-4 border-[#44475a] font-mono shadow-2xl overflow-hidden relative">
-                        {isAnalyzing ? (
-                            <div className="py-10 text-center space-y-3">
-                                <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                                <p className="text-blue-300 text-xs font-bold tracking-widest uppercase animate-pulse">Analyzing Canvas...</p>
-                            </div>
-                        ) : guideInfo && (
-                            <div className="space-y-4">
-                                <div className="border-b border-[#44475a] pb-2 mb-2">
-                                    <h3 className="text-xl font-bold text-yellow-300 tracking-tighter uppercase">{guideInfo.characterName}</h3>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 text-[10px]">
-                                    <div className="space-y-1">
-                                        <div className="flex justify-between"><span>HP</span><span className="text-green-400">{guideInfo.stats.hp}</span></div>
-                                        <div className="flex justify-between"><span>MP</span><span className="text-blue-400">{guideInfo.stats.mp}</span></div>
-                                        <div className="flex justify-between"><span>ATK</span><span className="text-red-400">{guideInfo.stats.atk}</span></div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <div className="flex justify-between"><span>DEF</span><span className="text-yellow-400">{guideInfo.stats.def}</span></div>
-                                        <div className="flex justify-between"><span>SPD</span><span className="text-purple-400">{guideInfo.stats.spd}</span></div>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <p className="text-[10px] leading-relaxed text-stone-300 italic">"{guideInfo.description}"</p>
-                                    <div className="flex flex-wrap gap-1">
-                                        {guideInfo.items.map((item, i) => (
-                                            <span key={i} className="px-1.5 py-0.5 bg-[#44475a] rounded text-[8px] text-yellow-200">[{item}]</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                <div className="space-y-4">
+                    <div className="text-center text-[10px] font-bold text-stone-300 tracking-[0.2em] uppercase">
+                        Remaining: {getRemainingGenerations()} / 10
                     </div>
-                )}
-
-                <div className="flex space-x-2 mt-4">
-                    <button onClick={() => onStartEditing({ url: generatedImage, base64: generatedImage.split(',')[1], mimeType: 'image/png' })} className="flex items-center space-x-2 px-4 py-2 bg-white border border-stone-100 rounded-full text-stone-600 text-xs font-bold shadow-sm hover:shadow-md transition-all">
-                        <ScissorsIcon className="w-4 h-4" />
-                        <span>直す</span>
-                    </button>
-                    <a href={generatedImage} download="quiet-atelier-art.png" className="flex items-center space-x-2 px-4 py-2 bg-white border border-stone-100 rounded-full text-stone-600 text-xs font-bold shadow-sm hover:shadow-md transition-all">
-                        <ArrowDownTrayIcon className="w-4 h-4" />
-                        <span>保存</span>
-                    </a>
+                    <Button 
+                        onClick={handleGenerate} 
+                        isLoading={isLoading} 
+                        disabled={!prompt || (useProModel && !hasApiKey)} 
+                        className="w-full py-8 text-xl rounded-full bg-rose-400 hover:bg-rose-500 text-white shadow-2xl border-none transition-all active:scale-[0.98] font-bold tracking-widest"
+                    >
+                        🖌️ 描き起こす
+                    </Button>
+                    {error && <p className="text-center text-xs text-rose-400 font-bold animate-pulse">{error}</p>}
                 </div>
               </div>
-            ) : (
-              <div className="text-center space-y-4 opacity-20">
-                <PhotoIcon className="w-16 h-16 text-stone-300 mx-auto" />
-                <p className="text-stone-400 font-bold">キャンバスは真っ白です</p>
+            </Card>
+          </div>
+
+          {/* Result Area */}
+          <div className="sticky top-12 space-y-8">
+            <div className="bg-white rounded-[3.5rem] p-6 min-h-[600px] flex flex-col items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.08)] border-8 border-white overflow-hidden relative group">
+              {isLoading ? (
+                <div className="text-center space-y-6">
+                  <Spinner size="lg" className="text-rose-300 mx-auto" />
+                  <p className="text-stone-300 font-light italic tracking-widest animate-pulse">Weaving fragments of stories...</p>
+                </div>
+              ) : generatedImage ? (
+                <div className="w-full flex flex-col items-center animate-in fade-in zoom-in-95 duration-1000">
+                  <img src={generatedImage} alt="Generated" className="w-full h-auto rounded-[2.5rem] shadow-sm mb-6" />
+                  
+                  {(guideInfo || isAnalyzing) && (
+                      <div className="w-full bg-[#1e1e2e] text-[#e0def4] p-8 rounded-[2.5rem] border-4 border-[#44475a] font-mono shadow-2xl overflow-hidden relative mb-6">
+                          {isAnalyzing ? (
+                              <div className="py-12 text-center space-y-4">
+                                  <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                                  <p className="text-blue-300 text-[10px] font-bold tracking-[0.3em] uppercase animate-pulse">Analyzing Canvas...</p>
+                              </div>
+                          ) : guideInfo && (
+                              <div className="space-y-6">
+                                  <div className="border-b border-[#44475a] pb-4">
+                                      <h3 className="text-2xl font-bold text-yellow-300 tracking-tighter uppercase">{guideInfo.characterName}</h3>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-6 text-xs">
+                                      <div className="space-y-2">
+                                          <div className="flex justify-between"><span>HP</span><span className="text-green-400">{guideInfo.stats.hp}</span></div>
+                                          <div className="flex justify-between"><span>MP</span><span className="text-blue-400">{guideInfo.stats.mp}</span></div>
+                                          <div className="flex justify-between"><span>ATK</span><span className="text-red-400">{guideInfo.stats.atk}</span></div>
+                                      </div>
+                                      <div className="space-y-2">
+                                          <div className="flex justify-between"><span>DEF</span><span className="text-yellow-400">{guideInfo.stats.def}</span></div>
+                                          <div className="flex justify-between"><span>SPD</span><span className="text-purple-400">{guideInfo.stats.spd}</span></div>
+                                      </div>
+                                  </div>
+                                  <div className="space-y-4">
+                                      <p className="text-xs leading-relaxed text-stone-400 italic">"{guideInfo.description}"</p>
+                                      <div className="flex flex-wrap gap-2">
+                                          {guideInfo.items.map((item, i) => (
+                                              <span key={i} className="px-2 py-1 bg-[#44475a] rounded text-[9px] text-yellow-200">[{item}]</span>
+                                          ))}
+                                      </div>
+                                  </div>
+                              </div>
+                          )}
+                      </div>
+                  )}
+
+                  <div className="flex space-x-3">
+                      <button onClick={() => onStartEditing({ url: generatedImage, base64: generatedImage.split(',')[1], mimeType: 'image/png' })} className="flex items-center space-x-2 px-6 py-3 bg-white border border-stone-100 rounded-full text-stone-500 text-xs font-bold shadow-sm hover:shadow-md transition-all">
+                          <ScissorsIcon className="w-4 h-4" />
+                          <span>直す</span>
+                      </button>
+                      <a href={generatedImage} download="quiet-atelier-art.png" className="flex items-center space-x-2 px-6 py-3 bg-white border border-stone-100 rounded-full text-stone-500 text-xs font-bold shadow-sm hover:shadow-md transition-all">
+                          <ArrowDownTrayIcon className="w-4 h-4" />
+                          <span>保存</span>
+                      </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center space-y-8">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-rose-100 blur-3xl opacity-20 rounded-full"></div>
+                    <PaintBrushIcon className="w-20 h-20 text-stone-100 mx-auto relative z-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-stone-200 font-bold tracking-[0.3em] text-xs uppercase">Atelier Quiet // Waiting for Inspiration</p>
+                    <p className="text-stone-100 text-[10px] font-light italic">キャンバスは真っ白です</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {generatedImage && (
+              <div className="p-8 bg-white rounded-[2.5rem] border border-stone-50 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="flex items-center space-x-3 text-stone-300">
+                      <CommandLineIcon className="w-4 h-4" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Prompt used</span>
+                  </div>
+                  <p className="text-xs text-stone-400 leading-relaxed italic">
+                      {prompt}
+                  </p>
               </div>
             )}
           </div>
-
-          {generatedImage && (
-            <div className="p-6 bg-white rounded-[2rem] border-2 border-stone-100 shadow-sm space-y-4">
-                <div className="flex items-center space-x-2 text-stone-400">
-                    <CommandLineIcon className="w-4 h-4" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Prompt used</span>
-                </div>
-                <p className="text-xs text-stone-500 leading-relaxed bg-stone-50 p-4 rounded-xl border border-stone-100 italic">
-                    {prompt}
-                </p>
-            </div>
-          )}
         </div>
       </div>
     </div>
