@@ -1,25 +1,5 @@
   import React, { useState, useEffect, useRef } from 'react';
-import { 
-    PhotoIcon, 
-    SparklesIcon, 
-    ArrowPathIcon, 
-    ArrowDownTrayIcon,
-    UserPlusIcon,
-    CheckIcon,
-    CommandLineIcon,
-    PaintBrushIcon,
-    Square3Stack3DIcon,
-    AdjustmentsHorizontalIcon,
-    ViewColumnsIcon,
-    BeakerIcon,
-    CloudArrowUpIcon,
-    ChatBubbleLeftRightIcon,
-    WandSparklesIcon,
-    ScissorsIcon,
-    VideoCameraIcon,
-    StarIcon
-} from '@heroicons/react/24/outline';
-import { generateImage, analyzeGuideImage, summarizeLog } from '../services/api';
+
 import Spinner from './Spinner';
 import Button from './Button';
 import { CharacterState, ImageForEditing } from '../App';
