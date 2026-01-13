@@ -307,7 +307,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
           <div className="space-y-6">
             {/* Step 1: 視点を決める */}
             <Card>
-              <StepHeader num={1} title="視点を決める" />
+              <StepHeader num={1} title="視点を決める" sub="(アングル選択)" />
               <div className="flex flex-wrap gap-2">
                   {angleOptions.map((opt) => (
                       <button
@@ -328,7 +328,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
 
             {/* Step 2: 物語を紡ぐ */}
             <Card>
-              <StepHeader num={2} title="物語を紡ぐ" />
+              <StepHeader num={2} title="物語を紡ぐ" sub="(今日の会話ログをコピペ)" />
               <div className="space-y-4">
                 <textarea 
                   value={log} 
@@ -352,7 +352,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-baseline space-x-2">
                     <span className="text-[10px] font-bold text-rose-400 tracking-widest uppercase">STEP 3 :</span>
-                    <h3 className="text-sm font-bold text-rose-400">画材を揃える</h3>
+                    <h3 className="text-sm font-bold text-rose-400">参考画像 ある？</h3><span className="text-[10px] text-stone-300 italic ml-2">(登場人物や小物の画像)</span>
                 </div>
                 <button onClick={handleAddCharacter} className="flex items-center space-x-2 text-rose-400 hover:opacity-70 transition-all">
                     <UserPlusIcon className="w-4 h-4" />
@@ -375,7 +375,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
 
             {/* Step 4: 下書きを描く */}
             <Card>
-              <StepHeader num={4} title="下書きを描く" />
+              <StepHeader num={4} title="こんなシーンでどう？" sub="(プロンプト生成・編集)" />
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
                   {activeCharacters.map(char => (
@@ -403,7 +403,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
 
             {/* Step 5: 筆致を選ぶ */}
             <Card>
-              <StepHeader num={5} title="筆致を選ぶ" />
+              <StepHeader num={5} title="お好きなスタイルで" sub="(画風・比率)" />
               <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-3">
                       <p className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">Style</p>
@@ -439,7 +439,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
 
             {/* Step 6: 仕上げる */}
             <Card className="bg-gradient-to-br from-white to-rose-50/30">
-              <StepHeader num={6} title="仕上げる" />
+              <StepHeader num={6} title="描いてみせます" sub="(プロモード切り替え・最終描画)" />
               <div className="space-y-6">
                 <div className="flex items-center justify-between p-4 bg-white/50 rounded-3xl border border-white shadow-sm">
                     <div className="flex items-center space-x-4">
@@ -558,7 +558,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                   </div>
                   <div className="space-y-2">
                     <p className="text-stone-200 font-bold tracking-[0.3em] text-xs uppercase">Atelier Quiet // Waiting for Inspiration</p>
-                    <p className="text-stone-100 text-[10px] font-light italic">キャンバスは真っ白です</p>
+                    <p className="text-stone-100 text-[10px] font-light italic">この一瞬を残したい</p>
                   </div>
                 </div>
               )}
