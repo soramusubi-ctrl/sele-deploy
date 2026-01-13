@@ -4,8 +4,9 @@ import Header from './components/Header';
 import ImageGenerator from './components/ImageGenerator';
 import ImageEditor from './components/ImageEditor';
 import VideoGenerator from './components/VideoGenerator';
+import HelpPage from './components/HelpPage';
 
-export type Tab = 'create' | 'play' | 'edit' | 'animate';
+export type Tab = 'create' | 'play' | 'edit' | 'animate' | 'help';
 
 export interface ImageForEditing {
   url: string;
@@ -60,6 +61,8 @@ const App: React.FC = () => {
         return <ImageEditor imageToEdit={imageToEdit} onEditingComplete={() => setImageToEdit(null)} />;
       case 'animate':
         return <VideoGenerator imageToAnimate={imageToAnimate} onAnimationComplete={() => setImageToAnimate(null)} />;
+      case 'help':
+        return <HelpPage />;
       default:
         return null;
     }
