@@ -591,11 +591,15 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
 
                   <div className="flex space-x-3">
                       <button onClick={() => onStartEditing({ url: generatedImage, base64: generatedImage.split(',')[1], mimeType: 'image/png' })} className="flex items-center space-x-2 px-6 py-3 bg-white border border-stone-100 rounded-full text-stone-500 text-xs font-bold shadow-sm hover:shadow-md transition-all">
-                          <ScissorsIcon className="w-4 h-4" />
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <path strokeLinecap="round" strokeLinejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 11-4.243 4.243 3 3 0 014.243-4.243zm0-5.758a3 3 0 11-4.243-4.243 3 3 0 014.243-4.243z" />
+</svg>
                           <span>直す</span>
                       </button>
                       <a href={generatedImage} download="quiet-atelier-art.png" className="flex items-center space-x-2 px-6 py-3 bg-white border border-stone-100 rounded-full text-stone-500 text-xs font-bold shadow-sm hover:shadow-md transition-all">
-                          <ArrowDownTrayIcon className="w-4 h-4" />
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+</svg>
                           <span>保存</span>
                       </a>
                   </div>
@@ -604,7 +608,9 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                 <div className="text-center space-y-8">
                   <div className="relative">
                     <div className="absolute inset-0 bg-rose-100 blur-3xl opacity-20 rounded-full"></div>
-                    <PaintBrushIcon className="w-20 h-20 text-stone-100 mx-auto relative z-10" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-20 h-20 text-stone-100 mx-auto relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" />
+</svg>
                   </div>
                   <div className="space-y-2">
                     <p className="text-stone-200 font-bold tracking-[0.3em] text-xs uppercase">Atelier Quiet // Waiting for Inspiration</p>
@@ -617,7 +623,9 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             {generatedImage && (
               <div className="p-8 bg-white rounded-[2.5rem] border border-stone-50 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <div className="flex items-center space-x-3 text-stone-300">
-                      <CommandLineIcon className="w-4 h-4" />
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+</svg>
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Prompt used</span>
                   </div>
                   <p className="text-xs text-stone-400 leading-relaxed italic">
