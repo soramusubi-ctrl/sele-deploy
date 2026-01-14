@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { generateImage, summarizeConversation, analyzeGuideImage, GuideInfo as GeminiGuideInfo } from '../services/geminiService';
-import Button from './common/Button';
-import Spinner from './common/Spinner';
+import Button from './Button';
+import Spinner from './Spinner';
 import type { ImageForEditing, CharacterState } from '../App';
 
 // Local GuideInfo interface to match UI needs
