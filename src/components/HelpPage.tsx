@@ -1,151 +1,118 @@
 import React from 'react';
-import Card from './Card';
+
+const Card = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
+  <div className={`bg-white rounded-[2.5rem] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-stone-50/50 ${className}`}>
+      {children}
+  </div>
+);
 
 const HelpPage: React.FC = () => {
   const steps = [
     {
-      title: 'Step 1：視点を決める (アングル選択)',
-      desc: '描きたいシーンの「距離感」や「角度」を選びます。アップにすれば表情が豊かに、引きにすれば風景が際立ちます。',
-      icon: '📐'
+      num: 1,
+      title: "視点を決める",
+      sub: "(アングル選択)",
+      desc: "カメラの角度や距離を選びます。アップなら表情豊かに、引きなら風景と共に。あなたの物語に最適な視点を見つけてください。"
     },
     {
-      title: 'Step 2：物語を紡ぐ (会話ログを活用)',
-      desc: '心に残った会話や日記などを入力してください。「ログからシーンを要約」ボタンを押すと、AIが自動で情景描写へ変換します。',
-      icon: '📜'
+      num: 2,
+      title: "物語を紡ぐ",
+      sub: "(今日の会話ログをコピペ)",
+      desc: "心に残った会話や日記の断片を貼り付けてください。AIがその場の空気感や感情を読み取り、絵画の核となる情景を要約します。"
     },
     {
-      title: 'Step 3：参考画像 ある？(人物や小物)',
-      desc: '特定のキャラクターや小物のイメージがある場合は、画像をアップロードしてください。AIがその特徴を理解し、絵に反映させます。',
-      icon: '🖼️'
+      num: 3,
+      title: "参考画像 ある？",
+      sub: "(登場人物や小物の画像)",
+      desc: "特定のキャラクターやアイテムを登場させたい場合は、画像をアップロードしてください。AIがその特徴を捉え、作品に反映させます。"
     },
     {
-      title: 'Step 4：こんなシーンでどう？ (構成)',
-      desc: '生成された要約を確認し、必要なら自由に書き換えてください。ここに入力された言葉が、直接キャンバスに描かれます。',
-      icon: '✍️'
+      num: 4,
+      title: "こんなシーンでどう？",
+      sub: "(プロンプト生成・編集)",
+      desc: "要約された物語を元に、具体的な描写を言葉にします。AIが提案した文章を自由に編集して、より理想に近い「下書き」を完成させましょう。"
     },
     {
-      title: 'Step 5：お好きなスタイルで (画風・比率)',
-      desc: '「水彩画」や「アニメ」などの画風、そして画像の比率を選びます。あなたの気分にぴったりの筆致を見つけてください。',
-      icon: '✨'
+      num: 5,
+      title: "お好きなスタイルで",
+      sub: "(画風・比率)",
+      desc: "水彩画、油絵、アニメ風など、作品の「筆致」を選びます。画面の比率も、SNS用や壁紙用など用途に合わせて調整可能です。"
     },
     {
-      title: 'Step 6：描いてみせます (プロモード・描画)',
-      desc: '準備ができたら大きなボタンを押しましょう。「プロモード」をONにすると、より高品質な描画エンジンが起動します。',
-      icon: '🎨'
+      num: 6,
+      title: "描いてみせます",
+      sub: "(プロモード切り替え・最終描画)",
+      desc: "すべての準備が整ったら「描き起こす」ボタンを押してください。プロモードでは、より高精細なモデルと解像度で、最高の一枚を仕上げます。"
     }
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="text-center space-y-4">
-        <h2 className="text-3xl font-bold text-stone-700">創作の手引き</h2>
-        <p className="text-stone-400">画家のアトリエへようこそ。あなたの物語を形にする方法をご紹介します。</p>
-      </div>
-
-      {/* プラン比較セクション */}
-      <section className="space-y-6">
-        <h3 className="text-xl font-bold text-stone-700 text-center">アトリエの利用プラン</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-2 border-stone-100 relative overflow-hidden">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="text-lg font-bold text-stone-600">スタンダード</h4>
-                <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">Free</span>
-              </div>
-              <ul className="space-y-3">
-                <li className="text-sm text-stone-500 flex items-center">
-                  <span className="text-rose-300 mr-2">✓</span> 基本的な描画機能
-                </li>
-                <li className="text-sm text-stone-500 flex items-center">
-                  <span className="text-rose-300 mr-2">✓</span> アニメ・水彩など標準スタイル
-                </li>
-                <li className="text-sm text-stone-500 flex items-center">
-                  <span className="text-rose-300 mr-2">✓</span> 標準解像度 (1K)
-                </li>
-                <li className="text-sm text-stone-200 flex items-center italic line-through">
-                   動画アニメーション生成
-                </li>
-              </ul>
-            </div>
-          </Card>
-
-          <Card className="border-2 border-rose-200 shadow-xl shadow-rose-50 relative overflow-hidden bg-gradient-to-br from-white to-rose-50/30">
-            <div className="absolute top-0 right-0 px-4 py-1 bg-rose-400 text-white text-[10px] font-black uppercase tracking-tighter rounded-bl-xl">Pro Member</div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="text-lg font-bold text-rose-500">プロ・メンバーシップ</h4>
-                <span className="text-xs font-bold text-rose-400 uppercase tracking-widest">Premium</span>
-              </div>
-              <ul className="space-y-3">
-                <li className="text-sm text-stone-600 flex items-center font-bold">
-                  <span className="text-rose-400 mr-2">★</span> 最高品質エンジン (Gemini 3 Pro)
-                </li>
-                <li className="text-sm text-stone-600 flex items-center font-bold">
-                  <span className="text-rose-400 mr-2">★</span> 4K 超高解像度出力
-                </li>
-                <li className="text-sm text-stone-600 flex items-center font-bold">
-                  <span className="text-rose-400 mr-2">★</span> 動画生成 (Veo) の全開放
-                </li>
-                <li className="text-sm text-stone-600 flex items-center font-bold">
-                  <span className="text-rose-400 mr-2">★</span> 複雑な指示への完璧な理解
-                </li>
-              </ul>
-              <p className="text-[10px] text-stone-400 mt-4 leading-relaxed italic">
-                ※ プロ機能の利用には、Google Cloudにて個別の課金設定が必要となります。
-              </p>
-            </div>
-          </Card>
+    <div className="min-h-screen bg-[#fdfaf7] px-4 py-12">
+      <div className="max-w-4xl mx-auto space-y-12">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold text-stone-700 tracking-tight">創作の手引き</h1>
+          <p className="text-stone-400 italic text-sm font-light">Quiet Atelier - User Guide & Membership</p>
         </div>
-      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {steps.map((step, index) => (
-          <Card key={index} className="hover:border-rose-100 transition-colors group">
-            <div className="flex items-start space-x-4">
-              <div className="text-3xl bg-stone-50 w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-rose-50 transition-colors flex-shrink-0">
-                {step.icon}
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-bold text-stone-700 leading-tight">{step.title}</h3>
-                <p className="text-sm text-stone-500 leading-relaxed">{step.desc}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="bg-gradient-to-r from-rose-50/50 to-purple-50/50 border-none">
-        <div className="space-y-6">
-          <h3 className="text-xl font-bold text-stone-700 flex items-center">
-             <span className="mr-2">💡</span> 創作をより深めるために
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="space-y-2">
-              <h4 className="font-bold text-stone-600 text-sm">「直す」タブ</h4>
-              <p className="text-xs text-stone-500 leading-loose">
-                生成された絵の「ここだけ変えたい」を叶えます。レイヤーを重ねるように、少しずつ魔法をかけて修正していけます。
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-bold text-stone-600 text-sm">「動かす」タブ</h4>
-              <p className="text-xs text-stone-500 leading-loose">
-                静止画に息吹を吹き込みます。雪を降らせたり、微笑ませたり。映像として動き出す瞬間を体験してください。
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-bold text-stone-600 text-sm">「遊ぶ」タブ</h4>
-              <p className="text-xs text-stone-500 leading-loose">
-                ぬいぐるみ化や4コマ漫画化など、ユニークな表現を楽しめます。「物語で遊ぶ」ための特別なキャンバスです。
-              </p>
-            </div>
+        <div className="space-y-8">
+          <h2 className="text-xl font-bold text-stone-600 border-l-4 border-rose-300 pl-4">創造のステップ</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {steps.map((step) => (
+              <Card key={step.num} className="hover:shadow-md transition-shadow">
+                <div className="flex items-baseline space-x-2 mb-3">
+                  <span className="text-[10px] font-bold text-rose-400 tracking-widest uppercase">STEP {step.num} :</span>
+                  <h3 className="text-sm font-bold text-stone-700">{step.title}</h3>
+                </div>
+                <p className="text-xs text-stone-400 leading-relaxed">{step.desc}</p>
+              </Card>
+            ))}
           </div>
         </div>
-      </Card>
 
-      <div className="text-center py-8">
-        <p className="text-[10px] text-stone-300 tracking-[0.3em] uppercase">
-          Happy Creating in Quiet Atelier
-        </p>
+        <div className="space-y-8">
+          <h2 className="text-xl font-bold text-stone-600 border-l-4 border-rose-300 pl-4">メンバーシップのご案内</h2>
+          <Card className="bg-gradient-to-br from-white to-rose-50/30">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-stone-100 rounded-full text-stone-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-stone-700">スタンダード</h3>
+                </div>
+                <ul className="text-xs text-stone-400 space-y-2 list-disc pl-4">
+                  <li>1日10回までの画像生成</li>
+                  <li>標準モデルによる描画</li>
+                  <li>基本的な画風の選択</li>
+                  <li>コミュニティでの作品共有</li>
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-rose-400 rounded-full text-white shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-stone-700">プロ・メンバーシップ</h3>
+                </div>
+                <ul className="text-xs text-stone-400 space-y-2 list-disc pl-4">
+                  <li>生成回数の制限なし</li>
+                  <li>最新の高画質モデル（Pro）の利用</li>
+                  <li>最大4K解像度での書き出し</li>
+                  <li>すべての特殊スタイルの解放</li>
+                  <li>先行機能へのアクセス</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <div className="text-center pt-8">
+          <p className="text-[10px] text-stone-300 uppercase tracking-[0.3em]">Atelier Quiet // Your Creative Sanctuary</p>
+        </div>
       </div>
     </div>
   );

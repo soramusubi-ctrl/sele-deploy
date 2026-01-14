@@ -1,28 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { generateImage, summarizeConversation, analyzeGuideImage, GuideInfo } from '../services/geminiService';
-import { fileToBase64 } from '../utils/fileUtils';
+import { generateImage, summarizeConversation, analyzeGuideImage, GuideInfo as GeminiGuideInfo } from '../services/geminiService';
 import Button from './common/Button';
 import Spinner from './common/Spinner';
 import type { ImageForEditing, CharacterState } from '../App';
 
-// Icons
-const UserPlusIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-    </svg>
-);
-
-const DiamondIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
-);
-
-const CheckIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-    </svg>
-);
+// Local GuideInfo interface to match UI needs
+interface LocalGuideInfo {
+    characterName: string;
+    stats: {
+        hp: number;
+        mp: number;
+        atk: number;
+        def: number;
+        spd: number;
+    };
+    description: string;
+    items: string[];
+}
 
 const WandIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -30,9 +24,9 @@ const WandIcon = () => (
     </svg>
 );
 
-const DownloadIcon = () => (
+const DiamondIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
     </svg>
 );
 
@@ -53,25 +47,6 @@ const PortraitIcon = () => (
         <rect x="7" y="3" width="10" height="18" rx="2" />
     </svg>
 );
-
-const ChatBubbleIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-    </svg>
-);
-
-interface GuideInfo {
-    characterName: string;
-    stats: {
-        hp: number;
-        mp: number;
-        atk: number;
-        def: number;
-        spd: number;
-    };
-    description: string;
-    items: string[];
-}
 
 const predefinedStyles = [
     { value: 'watercolor', label: '水彩画', mode: 'create' },
@@ -128,7 +103,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
   const [isSummarizing, setIsSummarizing] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [guideInfo, setGuideInfo] = useState<GuideInfo | null>(null);
+  const [guideInfo, setGuideInfo] = useState<LocalGuideInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState<boolean>(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
@@ -198,7 +173,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
     if (!log) return;
     setIsSummarizing(true);
     try {
-        const summary = await summarizeLog(log);
+        const summary = await summarizeConversation(log, angle);
         setPrompt(summary);
     } catch (err) {
         console.error("Summarization failed", err);
@@ -257,45 +232,50 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         } else if (style === 'plushie') {
             const charNames = activeCharacters.map(c => `「${c.name}」`).join('や');
             finalPrompt = `Create an adorable high-quality plushie ${charNames ? `modeled after ${charNames}` : ''}.
-            [Eyes]: Use glistening transparent "glass eyes" or "plastic eyes" instead of buttons. The eyes should have light reflections (catchlight) to emphasize liveliness and cuteness.
-            [Material texture]: Fluffy boa fabric or high-quality mohair texture that makes you want to touch it. Very fine and soft fur.
-            [Details]: Carefully hand-stitched seams, small embroidered paw pads, accessories like ribbons.
-            [Atmosphere]: Based on the scene (${prompt}), warm lighting and a cozy composition surrounded by soft cushions.
-            High quality, intricate plush texture, glistening glass eyes, warm and cozy aesthetic, high resolution.`;
-        } else if (style === 'instruction-manual') {
-            finalPrompt = `Create a page from a Japanese retro game strategy guide (official art book) depicting the scene: "${prompt}".
-            [Layout]: Character standing pose on the left side. On the right side, about 3 icons of magical items, weapons, or mysterious tools are neatly arranged.
-            [Design]: At the bottom, a status window with numerical values like HP, MP, ATK. Overall high-quality 2D digital paint style from the 1990s, with a slight printed paper texture.
-            Retro game manual aesthetic, 1990s digital art, official character design sheet.`;
-        } else if (style === 'picture-book') {
-            const charNames = activeCharacters.map(c => `「${c.name}」`).join('と');
-            finalPrompt = `A beautiful picture book spread placed on a wooden desk, capturing the heart of the story.
-            [Left page]: Handwritten-style English text (horizontal layout) gently narrating the scene based on: ${prompt}.
-            [Right page]: A fantastical illustration of "${prompt}" drawn in the highest quality watercolor style. ${charNames ? `Characters ${charNames} are vividly depicted in poses appropriate to their story roles.` : ''}
-            [Texture and lighting]: Old quality paper fiber texture, slight paper wrinkles. Soft sunlight filtering through a window falls on the pages, with dust particles glittering in the air.
-            Cinematic lighting, masterpiece children's book illustration, emotional and cozy atmosphere, high resolution.`;
+            The character should be a soft, huggable stuffed toy with visible fabric texture, stitching details, and cute button eyes.
+            Style: Soft toy photography, studio lighting, macro shot, felt and cotton texture.
+            Prompt: ${prompt}`;
         } else if (style === 'manga') {
-            const charNames = activeCharacters.map(c => `「${c.name}」`).join('や');
-            finalPrompt = `Create a traditional Japanese "4-panel manga (Yonkoma)" depicting the story: "${prompt}".
-            [Layout]: Four panels arranged vertically in an orderly manner.
-            Panel 1 (Introduction): Story setup, daily life.
-            Panel 2 (Development): An incident occurs.
-            Panel 3 (Twist): Unexpected development or joke.
-            Panel 4 (Conclusion): Ending or punchline.
-            [Visual]: High-quality monochrome line art and screen tones by professional manga artists. ${charNames ? `${charNames} show rich expressions in each panel.` : ''}
-            [Direction]: Speech bubbles, manga symbols (!, ?, sweat drops, etc.), English onomatopoeia.
-            Japanese Manga Style, 4-koma format, black and white.`;
+            finalPrompt = `Create a 4-panel manga (Yon-koma) layout telling a short story about: ${prompt}.
+            Style: Clean black and white manga art, expressive characters, speed lines, and sound effects (onomatopoeia in English like "POW", "WHOOSH", "ZAP").
+            Layout: 4 vertical panels with clear borders.`;
         } else if (style === 'sns-icons-12') {
-            const charNames = activeCharacters.map(c => `「${c.name}」`).join('や');
-            finalPrompt = `Create a set of 12 circular SNS icon materials in a 3x4 grid format on a single image.
-            [Subject]: Cute "chibi character (2-head-tall)" bust-up ${charNames ? `modeled after ${charNames}` : ''}.
-            [Diverse outfits]: All 12 icons should wear different costumes (casual wear, kimono, knight, maid, pajamas, uniform, cyber, gothic lolita, hero, wizard, mascot costume, tuxedo).
-            [Composition]: Each icon fits within a circular pastel-colored background, with an easy-to-cut design.
-            [Style]: Japanese anime-style icon with thick outlines and clear coloring.
-            Vibrant digital art, cute chibi avatar collection, 3x4 grid layout.`;
-        } else {
-            const styleLabel = predefinedStyles.find(s => s.value === style)?.label;
-            finalPrompt += `\nタッチ: ${styleLabel}`;
+            finalPrompt = `Create a grid of 12 different high-quality SNS profile icons for: ${prompt}.
+            Style: Modern flat illustration, vibrant colors, varied expressions and poses.
+            Layout: 3x4 grid of circular or square icons.`;
+        } else if (style === 'instruction-manual') {
+            finalPrompt = `Create a retro video game instruction manual page for: ${prompt}.
+            Include: Character artwork, stat bars (HP, MP, ATK, DEF), and a brief description in a classic RPG font.
+            Style: 90s JRPG manual art, slightly weathered paper texture, pixel art elements.`;
+        } else if (style === 'picture-book') {
+            finalPrompt = `Create a beautiful double-page spread for a children's picture book about: ${prompt}.
+            Style: Soft watercolor and colored pencil, whimsical atmosphere, large areas for text.
+            Include: A short poetic sentence in English at the bottom.`;
+        } else if (style === 'watercolor') {
+            finalPrompt = `「${prompt}」を、繊細な水彩画スタイルで描いてください。
+            【技法】：透明感のある色彩、美しい滲みとぼかし、手漉き紙の質感。
+            【雰囲気】：光が透き通るような、優しく穏やかな空気感。
+            Delicate watercolor painting, wet-on-wet technique, soft edges, paper texture.`;
+        } else if (style === 'oil-painting') {
+            finalPrompt = `「${prompt}」を、重厚な油彩画スタイルで描いてください。
+            【技法】：力強い筆致（インパスト）、豊かな色彩の重なり、キャンバスの布目。
+            【雰囲気】：古典的で格調高く、光と影のコントラストが際立つ表現。
+            Classic oil painting, thick brushstrokes, impasto technique, canvas texture, dramatic lighting.`;
+        } else if (style === 'chibi') {
+            finalPrompt = `「${prompt}」を、愛らしいちびキャラ（2頭身）スタイルで描いてください。
+            【特徴】：大きな瞳、デフォルメされた体型、ポップで明るい配色。
+            【雰囲気】：元気いっぱいで、見ているだけで癒されるような可愛さ。
+            Cute chibi style, super deformed, big expressive eyes, vibrant colors, kawaii aesthetic.`;
+        } else if (style === 'line-art') {
+            finalPrompt = `「${prompt}」を、洗練された線画（ラインアート）スタイルで描いてください。
+            【技法】：強弱のある美しい主線、最小限の陰影、白場を活かした構成。
+            【雰囲気】：ミニマルでモダン、かつキャラクターの個性が際立つ表現。
+            Clean line art, minimalist style, elegant strokes, black and white with selective accents.`;
+        } else if (style === '3d-render') {
+            finalPrompt = `「${prompt}」を、最新の3Dレンダリングスタイルで描いてください。
+            【質感】：サブサーフェス・スキャッタリングによる柔らかな肌、物理ベースのリアルな素材感。
+            【雰囲気】：ピクサーやドリームワークスのような、高品質な3Dアニメーション映画のワンシーン。
+            High-end 3D render, Octane render, Ray tracing, stylized character design, soft global illumination.`;
         }
 
         const base64 = await generateImage(finalPrompt, activeCharacters, aspect, useProModel, resolution, angle);
@@ -307,8 +287,21 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         if (style === 'instruction-manual') {
             setIsAnalyzing(true);
             try {
-                const info = await analyzeGuideImage(base64);
-                setGuideInfo(info);
+                const info: GeminiGuideInfo = await analyzeGuideImage(base64);
+                // Map GeminiGuideInfo to LocalGuideInfo
+                const localInfo: LocalGuideInfo = {
+                    characterName: info.characterName,
+                    description: info.description,
+                    items: info.items.map(i => i.name),
+                    stats: {
+                        hp: info.stats.find(s => s.label.toUpperCase() === 'HP')?.value || 100,
+                        mp: info.stats.find(s => s.label.toUpperCase() === 'MP')?.value || 100,
+                        atk: info.stats.find(s => s.label.toUpperCase() === 'ATK')?.value || 10,
+                        def: info.stats.find(s => s.label.toUpperCase() === 'DEF')?.value || 10,
+                        spd: info.stats.find(s => s.label.toUpperCase() === 'SPD')?.value || 10,
+                    }
+                };
+                setGuideInfo(localInfo);
             } catch (err) {
                 console.error("Analysis failed", err);
             } finally {
@@ -405,7 +398,9 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                     <h3 className="text-sm font-bold text-rose-400">参考画像 ある？</h3><span className="text-[10px] text-stone-300 italic ml-2">(登場人物や小物の画像)</span>
                 </div>
                 <button onClick={handleAddCharacter} className="flex items-center space-x-2 text-rose-400 hover:opacity-70 transition-all">
-                    <UserPlusIcon className="w-4 h-4" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
                     <span className="text-[11px] font-bold">追加</span>
                 </button>
               </div>
@@ -417,7 +412,11 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                       <input type="file" className="hidden" onChange={(e) => handleFileChange(e, char.id)} />
                     </label>
                     <input value={char.name} onChange={(e) => setCharacters(prev => prev.map(c => c.id === char.id ? {...c, name: e.target.value} : c))} className="ml-2 w-20 text-[11px] font-bold text-stone-700 outline-none bg-transparent" />
-                    <button onClick={() => toggleCharacterActive(char.id)} className={`ml-2 w-5 h-5 rounded-full flex items-center justify-center ${char.isActive ? 'bg-rose-400 text-white' : 'bg-stone-200 text-white'}`}><CheckIcon className="w-3 h-3" /></button>
+                    <button onClick={() => toggleCharacterActive(char.id)} className={`ml-2 w-5 h-5 rounded-full flex items-center justify-center ${char.isActive ? 'bg-rose-400 text-white' : 'bg-stone-200 text-white'}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -592,14 +591,14 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                   <div className="flex space-x-3">
                       <button onClick={() => onStartEditing({ url: generatedImage, base64: generatedImage.split(',')[1], mimeType: 'image/png' })} className="flex items-center space-x-2 px-6 py-3 bg-white border border-stone-100 rounded-full text-stone-500 text-xs font-bold shadow-sm hover:shadow-md transition-all">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-  <path strokeLinecap="round" strokeLinejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 11-4.243 4.243 3 3 0 014.243-4.243zm0-5.758a3 3 0 11-4.243-4.243 3 3 0 014.243-4.243z" />
-</svg>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 11-4.243 4.243 3 3 0 014.243-4.243zm0-5.758a3 3 0 11-4.243-4.243 3 3 0 014.243-4.243z" />
+                          </svg>
                           <span>直す</span>
                       </button>
                       <a href={generatedImage} download="quiet-atelier-art.png" className="flex items-center space-x-2 px-6 py-3 bg-white border border-stone-100 rounded-full text-stone-500 text-xs font-bold shadow-sm hover:shadow-md transition-all">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-</svg>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
                           <span>保存</span>
                       </a>
                   </div>
@@ -609,8 +608,8 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                   <div className="relative">
                     <div className="absolute inset-0 bg-rose-100 blur-3xl opacity-20 rounded-full"></div>
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-20 h-20 text-stone-100 mx-auto relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-  <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" />
-</svg>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" />
+                    </svg>
                   </div>
                   <div className="space-y-2">
                     <p className="text-stone-200 font-bold tracking-[0.3em] text-xs uppercase">Atelier Quiet // Waiting for Inspiration</p>
@@ -624,8 +623,8 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
               <div className="p-8 bg-white rounded-[2.5rem] border border-stone-50 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <div className="flex items-center space-x-3 text-stone-300">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
-</svg>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Prompt used</span>
                   </div>
                   <p className="text-xs text-stone-400 leading-relaxed italic">
@@ -639,8 +638,5 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
     </div>
   );
 };
-
-const UserPlusIcon = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className || "w-4 h-4"}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v9m-4.5-4.5h9M3.75 20.25v-4.5m0 0h4.5m-4.5 0L9 11.25M18 20.25v-4.5m0 0h4.5m-4.5 0L23.25 11.25" /></svg>;
-const CheckIcon = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className={className || "w-4 h-4"}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>;
 
 export default ImageGenerator;
