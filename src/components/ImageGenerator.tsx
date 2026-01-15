@@ -318,6 +318,12 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
   const filteredStyles = predefinedStyles.filter(s => s.mode === mode || s.mode === 'both');
   const activeCharacters = characters.filter(c => c.isActive);
 
+  const samplePrompts = [
+    { label: "幻想的な森", text: "A mystical forest with glowing mushrooms and floating fireflies, ethereal lighting, soft focus background" },
+    { label: "海辺のカフェ", text: "A cozy seaside cafe at sunset, warm golden hour light, sparkling ocean waves, peaceful atmosphere" },
+    { label: "星空の図書室", text: "A grand library with a glass ceiling showing a starry night sky, floating books, magical blue aura" }
+  ];
+
   const StepHeader = ({ num, title, sub }: { num: number, title: string, sub?: string }) => (
     <div className="flex items-center justify-between mb-4">
         <div className="flex items-baseline space-x-2">
@@ -440,6 +446,24 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                       </button>
                   ))}
                 </div>
+                
+                <div className="p-4 bg-stone-50 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Try Samples</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {samplePrompts.map((sample, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setPrompt(sample.text)}
+                        className="px-3 py-1.5 bg-white border border-stone-100 rounded-full text-[10px] font-bold text-stone-500 hover:border-rose-200 hover:text-rose-400 transition-all shadow-sm"
+                      >
+                        {sample.label} を試す
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <textarea 
                   ref={promptRef} 
                   value={prompt} 
