@@ -5,8 +5,9 @@ import ImageGenerator from './components/ImageGenerator';
 import ImageEditor from './components/ImageEditor';
 import VideoGenerator from './components/VideoGenerator';
 import HelpPage from './components/HelpPage';
+import CharacterManager from './components/CharacterManager';
 
-export type Tab = 'create' | 'play' | 'edit' | 'animate' | 'help';
+export type Tab = 'create' | 'play' | 'edit' | 'animate' | 'help' | 'characters';
 
 export interface ImageForEditing {
   url: string;
@@ -19,6 +20,13 @@ export interface CharacterState {
   name: string;
   isActive: boolean;
   images: ImageForEditing[];
+  // New fields for generated characters
+  age?: string;
+  gender?: string;
+  hair?: string;
+  eyes?: string;
+  vibe?: string;
+  notes?: string;
 }
 
 const App: React.FC = () => {
@@ -63,6 +71,40 @@ const App: React.FC = () => {
         return <VideoGenerator imageToAnimate={imageToAnimate} onAnimationComplete={() => setImageToAnimate(null)} />;
       case 'help':
         return <HelpPage />;
+      case 'characters':
+        return (
+          <CharacterManager 
+            savedCharacters={characters.map(c => ({
+              id: c.id,
+              name: c.name,
+              age: c.age || '',
+              gender: c.gender || '',
+              hair: c.hair || '',
+              eyes: c.eyes || '',
+              vibe: c.vibe || '',
+              notes: c.notes || '',
+              imageUrl: c.images[0]?.url || ''
+            }))}
+            onSave={(newChar) => {
+              const charState: CharacterState = {
+                id: newChar.id,
+                name: newChar.name,
+                isActive: true,
+                images: [{ url: newChar.imageUrl, base64: '', mimeType: 'image/png' }],
+                age: newChar.age,
+                gender: newChar.gender,
+                hair: newChar.hair,
+                eyes: newChar.eyes,
+                vibe: newChar.vibe,
+                notes: newChar.notes
+              };
+              setCharacters(prev => [...prev, charState]);
+            }}
+            onDelete={(id) => {
+              setCharacters(prev => prev.filter(c => c.id !== id));
+            }}
+          />
+        );
       default:
         return null;
     }

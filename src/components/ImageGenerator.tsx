@@ -132,32 +132,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
     }
   };
 
-  const handleAddCharacter = () => {
-    const newChar: CharacterState = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: '新キャラ',
-      isActive: true,
-      images: []
-    };
-    setCharacters(prev => [...prev, newChar]);
-  };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, charId: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const base64 = event.target?.result as string;
-      const image: ImageForEditing = {
-        url: base64,
-        base64: base64.split(',')[1],
-        mimeType: file.type
-      };
-      setCharacters(prev => prev.map(c => c.id === charId ? { ...c, images: [image] } : c));
-    };
-    reader.readAsDataURL(file);
-  };
 
   const toggleCharacterActive = (id: string) => {
     setCharacters(prev => prev.map(c => c.id === id ? { ...c, isActive: !c.isActive } : c));
@@ -362,7 +337,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                       <button
                           key={opt.value}
                           onClick={() => setAngle(opt.value)}
-                          className={`flex items-center space-x-2 px-4 py-2 rounded-full text-[11px] font-bold transition-all ${
+                          className={`flex items-center space-x-2 px-4 py-2 rounded-full text-[14px] font-bold transition-all ${
                               angle === opt.value 
                               ? 'bg-rose-400 text-white shadow-md' 
                               : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
@@ -383,12 +358,12 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                   value={log} 
                   onChange={(e) => setLog(e.target.value)} 
                   placeholder="心に残った会話や、日記の断片をここに..." 
-                  className="w-full h-24 bg-stone-50 rounded-2xl p-4 text-xs text-stone-600 outline-none resize-none placeholder:text-stone-300" 
+                  className="w-full h-24 bg-stone-50 rounded-2xl p-4 text-[14px] text-stone-600 outline-none resize-none placeholder:text-stone-300" 
                 />
                 <button 
                   onClick={handleSummarize} 
                   disabled={isSummarizing || !log} 
-                  className="w-full py-3 bg-white border border-rose-100 rounded-full text-rose-400 text-[11px] font-bold hover:bg-rose-50 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                  className="w-full py-3 bg-white border border-rose-100 rounded-full text-rose-400 text-[14px] font-bold hover:bg-rose-50 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
                 >
                   {isSummarizing ? <Spinner size="sm" /> : <WandIcon />}
                   <span>ログからシーンを要約</span>
@@ -403,28 +378,29 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                     <span className="text-[10px] font-bold text-rose-400 tracking-widest uppercase">STEP 3 :</span>
                     <h3 className="text-sm font-bold text-rose-400">参考画像 ある？</h3><span className="text-[10px] text-stone-300 italic ml-2">(登場人物や小物の画像)</span>
                 </div>
-                <button onClick={handleAddCharacter} className="flex items-center space-x-2 text-rose-400 hover:opacity-70 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                    <span className="text-[11px] font-bold">追加</span>
-                </button>
+                <div className="text-[10px] text-stone-300 italic bg-stone-50 px-3 py-1 rounded-full">
+                    設定タブで登録したキャラがここに表示されます
+                </div>
               </div>
               <div className="flex flex-wrap gap-3">
                 {characters.map(char => (
-                  <div key={char.id} className={`flex items-center p-1.5 rounded-full border transition-all ${char.isActive ? 'bg-rose-50 border-rose-100' : 'bg-white border-stone-100 opacity-60'}`}>
-                    <label className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden cursor-pointer border-2 border-white shadow-sm">
-                      {char.images[0] ? <img src={char.images[0].url} className="w-full h-full object-cover" /> : <span className="text-stone-300 text-xs">+</span>}
-                      <input type="file" className="hidden" onChange={(e) => handleFileChange(e, char.id)} />
-                    </label>
-                    <input value={char.name} onChange={(e) => setCharacters(prev => prev.map(c => c.id === char.id ? {...c, name: e.target.value} : c))} className="ml-2 w-20 text-[11px] font-bold text-stone-700 outline-none bg-transparent" />
-                    <button onClick={() => toggleCharacterActive(char.id)} className={`ml-2 w-5 h-5 rounded-full flex items-center justify-center ${char.isActive ? 'bg-rose-400 text-white' : 'bg-stone-200 text-white'}`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <div key={char.id} className={`flex items-center p-1.5 pr-4 rounded-full border transition-all ${char.isActive ? 'bg-rose-50 border-rose-100' : 'bg-white border-stone-100 opacity-60'}`}>
+                    <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                      {char.images[0] ? <img src={char.images[0].url} className="w-full h-full object-cover" /> : <span className="text-stone-300 text-xs">?</span>}
+                    </div>
+                    <span className="ml-3 text-[14px] font-bold text-stone-700">{char.name}</span>
+                    <button onClick={() => toggleCharacterActive(char.id)} className={`ml-3 w-6 h-6 rounded-full flex items-center justify-center transition-colors ${char.isActive ? 'bg-rose-400 text-white' : 'bg-stone-100 text-stone-300'}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                     </button>
                   </div>
                 ))}
+                {characters.length === 0 && (
+                  <div className="w-full py-6 text-center border-2 border-dashed border-stone-50 rounded-3xl">
+                    <p className="text-stone-300 text-xs italic">設定タブからキャラクターを登録してください</p>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -442,7 +418,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                           <div className="w-5 h-5 rounded-full overflow-hidden bg-stone-200 border border-white">
                               {char.images[0] && <img src={char.images[0].url} className="w-full h-full object-cover" />}
                           </div>
-                          <span className="text-[10px] font-bold text-stone-500 group-hover:text-rose-400">{char.name}</span>
+                          <span className="text-[14px] font-bold text-stone-500 group-hover:text-rose-400">{char.name}</span>
                       </button>
                   ))}
                 </div>
@@ -469,7 +445,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                   value={prompt} 
                   onChange={(e) => setPrompt(e.target.value)} 
                   placeholder="描きたい情景の、具体的な筆致をここに..." 
-                  className="w-full h-32 text-stone-700 bg-transparent outline-none resize-none placeholder:text-stone-200 text-sm leading-relaxed" 
+                  className="w-full h-32 text-stone-700 bg-transparent outline-none resize-none placeholder:text-stone-200 text-[14px] leading-relaxed" 
                 />
               </div>
             </Card>
@@ -482,7 +458,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                       <p className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">Style</p>
                       <div className="grid grid-cols-1 gap-2">
                           {filteredStyles.map(s => (
-                              <button key={s.value} onClick={() => setStyle(s.value)} className={`p-2.5 rounded-xl border text-[11px] font-bold transition-all ${style === s.value ? 'border-rose-200 bg-rose-50 text-rose-500 shadow-sm' : 'border-stone-100 bg-white text-stone-400'}`}>
+                              <button key={s.value} onClick={() => setStyle(s.value)} className={`p-2.5 rounded-xl border text-[14px] font-bold transition-all ${style === s.value ? 'border-rose-200 bg-rose-50 text-rose-500 shadow-sm' : 'border-stone-100 bg-white text-stone-400'}`}>
                                   {s.label}
                               </button>
                           ))}
@@ -502,7 +478,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                                   className={`flex items-center space-x-4 p-2.5 rounded-xl border transition-all ${aspect === item.value ? 'bg-rose-50 border-rose-200 text-rose-500 shadow-sm' : 'bg-white border-stone-100 text-stone-400'}`}
                               >
                                   {item.icon}
-                                  <span className="text-[11px] font-bold">{item.label}</span>
+                                  <span className="text-[14px] font-bold">{item.label}</span>
                               </button>
                           ))}
                       </div>
@@ -518,8 +494,8 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                     <div className="flex items-center space-x-4">
                         <div className="p-2.5 bg-rose-400 rounded-full text-white shadow-md"><DiamondIcon /></div>
                         <div>
-                            <h3 className="text-xs font-bold text-stone-700">プロモード</h3>
-                            <p className="text-[10px] text-stone-400">高画質モデル / 解像度選択</p>
+                            <h3 className="text-[14px] font-bold text-stone-700">プロモード</h3>
+                            <p className="text-[12px] text-stone-400">高画質モデル / 解像度選択</p>
                         </div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -537,7 +513,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                         ) : (
                             <div className="flex space-x-2">
                                 {['1K', '2K', '4K'].map((res) => (
-                                    <button key={res} onClick={() => setResolution(res as any)} className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all border ${resolution === res ? 'bg-rose-400 border-rose-400 text-white shadow-md' : 'bg-white border-stone-200 text-stone-400'}`}>
+                                    <button key={res} onClick={() => setResolution(res as any)} className={`flex-1 py-2.5 rounded-xl text-[14px] font-bold transition-all border ${resolution === res ? 'bg-rose-400 border-rose-400 text-white shadow-md' : 'bg-white border-stone-200 text-stone-400'}`}>
                                         {res}
                                     </button>
                                 ))}
