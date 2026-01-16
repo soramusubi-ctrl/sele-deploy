@@ -38,7 +38,12 @@ const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, on
     if (!newChar.name) return;
     setIsGenerating(true);
     try {
-      const prompt = `A character portrait of ${newChar.name}, ${newChar.age} ${newChar.gender}, with ${newChar.hair} hair and ${newChar.eyes} eyes. Atmosphere: ${newChar.vibe}. Special notes: ${newChar.notes}. High quality, artistic style, simple background.`;
+      const prompt = `A high-quality character portrait of ${newChar.name}, ${newChar.age} ${newChar.gender}. 
+      Appearance: ${newChar.hair} hair, ${newChar.eyes} eyes. 
+      Atmosphere: ${newChar.vibe}. 
+      Special notes: ${newChar.notes}. 
+      Style: Soft and beautiful modern anime style, slightly realistic with transparent and delicate coloring. 
+      Luminous lighting, ethereal atmosphere, high detail, simple artistic background.`;
       const base64Data = await generateImage(prompt, [], '1:1', false);
       if (base64Data) {
         setPreviewUrl(`data:image/png;base64,${base64Data}`);
