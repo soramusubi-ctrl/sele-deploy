@@ -110,6 +110,25 @@ const HelpPage: React.FC = () => {
           </Card>
         </div>
 
+        <div className="space-y-6">
+          <h2 className="text-xl font-bold text-stone-600 border-l-4 border-rose-300 pl-4">生成に関するご注意</h2>
+          <Card className="bg-stone-50/50 border-dashed border-stone-200">
+            <div className="flex items-start space-x-4">
+              <div className="p-2 bg-stone-200 rounded-full text-stone-500 mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-stone-700">セーフガードについて</h3>
+                <p className="text-xs text-stone-400 leading-relaxed">
+                  本アプリではAIの安全基準（セーフガード）を適用しています。暴力的な表現、公序良俗に反する内容、または著作権侵害の恐れがあるプロンプトや画像については、AIの判断により生成が制限されたり、ご希望通りに描き起こされない場合があります。あらかじめご了承ください。
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
         <div className="text-center pt-8">
           <p className="text-[10px] text-stone-300 uppercase tracking-[0.3em]">Atelier Quiet // Your Creative Sanctuary</p>
         </div>
