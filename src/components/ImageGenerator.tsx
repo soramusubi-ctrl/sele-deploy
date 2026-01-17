@@ -216,7 +216,14 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             activeCharacters.map(async (c) => {
                 const imageUrl = c.images[0]?.url || '';
                 const blob = await compressImage(imageUrl, 1024, 0.8);
-                return await blobToBase64(blob);
+                const base64 = await blobToBase64(blob);
+                return {
+                    name: c.name,
+                    images: [{
+                        base64: base64,
+                        mimeType: blob.type
+                    }]
+                };
             })
         );
 
