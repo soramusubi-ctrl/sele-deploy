@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { generateImage } from '../services/geminiService';
 import Button from './Button';
 import Spinner from './Spinner';
+import { compressImage, blobToBase64 } from '../utils/imageUtils';
 
 interface Character {
   id: string;
@@ -46,7 +47,11 @@ const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, on
       Luminous lighting, ethereal atmosphere, high detail, simple artistic background.`;
       const base64Data = await generateImage(prompt, [], '1:1', false);
       if (base64Data) {
-        setPreviewUrl(`data:image/png;base64,${base64Data}`);
+        // 生成された画像を圧縮して保存（ストレージ節約とAPI制限回避のため）
+        const rawUrl = `data:image/png;base64,${base64Data}`;
+        const compressedBlob = await compressImage(rawUrl, 1024, 0.8);
+        const compressedBase64 = await blobToBase64(compressedBlob);
+        setPreviewUrl(`data:image/webp;base64,${compressedBase64}`);
       }
     } catch (err) {
       console.error("Character generation failed", err);

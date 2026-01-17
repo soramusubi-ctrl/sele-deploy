@@ -3,6 +3,7 @@ import { generateImage, summarizeConversation, analyzeGuideImage, GuideInfo as G
 import Button from './Button';
 import Spinner from './Spinner';
 import type { ImageForEditing, CharacterState } from '../App';
+import { compressImage, blobToBase64 } from '../utils/imageUtils';
 
 // Local GuideInfo interface to match UI needs
 interface LocalGuideInfo {
@@ -192,6 +193,16 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
 
     try {
         const activeCharacters = characters.filter(c => c.isActive);
+        
+        // アクティブなキャラクターの画像を圧縮してBase64配列を作成
+        const characterImages = await Promise.all(
+            activeCharacters.map(async (c) => {
+                const imageUrl = c.images[0]?.url || '';
+                const blob = await compressImage(imageUrl, 1024, 0.8);
+                return await blobToBase64(blob);
+            })
+        );
+
         let finalPrompt = prompt;
 
         if (angle !== 'auto' && angleInstructionMap[angle]) {
@@ -253,7 +264,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             High-end 3D render, Octane render, Ray tracing, stylized character design, soft global illumination.`;
         }
 
-        const base64 = await generateImage(finalPrompt, activeCharacters, aspect, useProModel, resolution, angle);
+        const base64 = await generateImage(finalPrompt, characterImages, aspect, useProModel, resolution, angle);
         const imageUrl = `data:image/png;base64,${base64}`;
         setGeneratedImage(imageUrl);
         
