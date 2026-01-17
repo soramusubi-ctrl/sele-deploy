@@ -369,7 +369,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                   value={log} 
                   onChange={(e) => setLog(e.target.value)} 
                   placeholder="心に残った会話や、日記の断片をここに..." 
-                  className="w-full h-24 bg-stone-50 rounded-2xl p-4 text-[14px] text-stone-600 outline-none resize-none placeholder:text-stone-300" 
+                  className="w-full h-24 bg-stone-50 rounded-2xl p-4 text-[14px] text-stone-600 outline-none resize-y min-h-[96px] placeholder:text-stone-300 border border-transparent focus:border-rose-100 transition-all" 
                 />
                 <button 
                   onClick={handleSummarize} 
@@ -456,7 +456,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                   value={prompt} 
                   onChange={(e) => setPrompt(e.target.value)} 
                   placeholder="描きたい情景の、具体的な筆致をここに..." 
-                  className="w-full h-32 text-stone-700 bg-transparent outline-none resize-none placeholder:text-stone-200 text-[14px] leading-relaxed" 
+                  className="w-full h-32 text-stone-700 bg-stone-50 rounded-2xl p-4 outline-none resize-y min-h-[128px] placeholder:text-stone-300 text-[14px] leading-relaxed border border-transparent focus:border-rose-100 transition-all" 
                 />
               </div>
             </Card>
