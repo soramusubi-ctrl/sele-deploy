@@ -362,7 +362,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             </Card>
 
             {/* Step 2: 物語を紡ぐ */}
-            <Card>
+            <Card key="step-2-log-input">
               <StepHeader num={2} title="物語を紡ぐ" sub="(今日の会話ログをコピペ)" />
               <div className="space-y-4">
                 <textarea 
@@ -419,7 +419,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             </Card>
 
             {/* Step 4: 下書きを描く */}
-            <Card>
+            <Card key="step-4-prompt-input">
               <StepHeader num={4} title="こんなシーンでどう？" sub="(プロンプト生成・編集)" />
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
