@@ -81,8 +81,25 @@ const angleInstructionMap: Record<string, string> = {
     'long': '構図：キャラクターの全身と周囲の風景が広く映る、開放的なロングショット、引きの構図。',
     'low-angle': '構図：低い位置から見上げるような、キャラクターが力強く、あるいは大きく見えるローアングル、あおり構図。',
     'high-angle': '構図：高い位置から見下ろすような、キャラクターが愛らしく見えるハイアングル、俯瞰構図。',
-    'diagonal-right-top': '構図：被写体を右斜め上の高めの位置から捉えた、立体的で奥行きのあるダイナミックなアングル。'
+    'diagonal-right-top': '構図：被写体を右斜め上の高めの位置から捕らえた、立体的で奥行きのあるダイナミックなアングル。'
 };
+
+// Move StepHeader and Card outside the component to prevent re-creation on each render
+const StepHeader = ({ num, title, sub }: { num: number, title: string, sub?: string }) => (
+  <div className="flex items-center justify-between mb-4">
+      <div className="flex items-baseline space-x-2">
+          <span className="text-[10px] font-bold text-rose-400 tracking-widest uppercase">STEP {num} :</span>
+          <h3 className="text-sm font-bold text-rose-400">{title}</h3>
+      </div>
+      {sub && <span className="text-[10px] text-stone-300 italic">{sub}</span>}
+  </div>
+);
+
+const Card = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
+  <div className={`bg-white rounded-[2.5rem] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-stone-50/50 ${className}`}>
+      {children}
+  </div>
+);
 
 interface ImageGeneratorProps {
   mode: 'create' | 'play';
@@ -309,22 +326,6 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
     { label: "海辺のカフェ", text: "A cozy seaside cafe at sunset, warm golden hour light, sparkling ocean waves, peaceful atmosphere" },
     { label: "星空の図書室", text: "A grand library with a glass ceiling showing a starry night sky, floating books, magical blue aura" }
   ];
-
-  const StepHeader = ({ num, title, sub }: { num: number, title: string, sub?: string }) => (
-    <div className="flex items-center justify-between mb-4">
-        <div className="flex items-baseline space-x-2">
-            <span className="text-[10px] font-bold text-rose-400 tracking-widest uppercase">STEP {num} :</span>
-            <h3 className="text-sm font-bold text-rose-400">{title}</h3>
-        </div>
-        {sub && <span className="text-[10px] text-stone-300 italic">{sub}</span>}
-    </div>
-  );
-
-  const Card = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
-    <div className={`bg-white rounded-[2.5rem] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-stone-50/50 ${className}`}>
-        {children}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-[#fdfaf7] px-4 py-12">
