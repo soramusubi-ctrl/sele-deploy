@@ -172,7 +172,7 @@ export const generateImage = async (
 
             const response = await ai.models.generateContent({
                 model,
-                contents: { parts },
+                contents: [{ parts }],
                 config: { 
                     imageConfig: { 
                         aspectRatio, 
