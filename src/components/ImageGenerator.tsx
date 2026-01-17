@@ -362,15 +362,13 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             </Card>
 
             {/* Step 2: 物語を紡ぐ */}
-            <Card key="step-2-log-input">
+            <Card>
               <StepHeader num={2} title="物語を紡ぐ" sub="(今日の会話ログをコピペ)" />
               <div className="space-y-4">
                 <textarea 
+                  key="log-textarea"
                   value={log} 
-                  onChange={(e) => {
-	                    if (e.nativeEvent.isComposing) return;
-	                    setLog(e.target.value);
-	                  }} 
+                  onChange={(e) => setLog(e.target.value)} 
                   placeholder="心に残った会話や、日記の断片をここに..." 
                   className="w-full h-24 bg-stone-50 rounded-2xl p-4 text-[14px] text-stone-600 outline-none resize-y min-h-[96px] placeholder:text-stone-300 border border-transparent focus:border-rose-100 transition-all" 
                 />
@@ -419,7 +417,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             </Card>
 
             {/* Step 4: 下書きを描く */}
-            <Card key="step-4-prompt-input">
+            <Card>
               <StepHeader num={4} title="こんなシーンでどう？" sub="(プロンプト生成・編集)" />
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
@@ -455,12 +453,10 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                 </div>
 
                 <textarea 
+                  key="prompt-textarea"
                   ref={promptRef} 
                   value={prompt} 
-                  onChange={(e) => {
-	                    if (e.nativeEvent.isComposing) return;
-	                    setPrompt(e.target.value);
-	                  }} 
+                  onChange={(e) => setPrompt(e.target.value)} 
                   placeholder="描きたい情景の、具体的な筆致をここに..." 
                   className="w-full h-32 text-stone-700 bg-stone-50 rounded-2xl p-4 outline-none resize-y min-h-[128px] placeholder:text-stone-300 text-[14px] leading-relaxed border border-transparent focus:border-rose-100 transition-all" 
                 />
