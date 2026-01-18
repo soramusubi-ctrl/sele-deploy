@@ -396,7 +396,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-baseline space-x-2">
                     <span className="text-[10px] font-bold text-rose-400 tracking-widest uppercase">STEP 3 :</span>
-                    <h3 className="text-sm font-bold text-rose-400">参考画像 ある？</h3><span className="text-[10px] text-stone-300 italic ml-2">(登場人物や小物の画像)</span>
+                    <h3 className="text-sm font-bold text-rose-400">設定した登場人物</h3><span className="text-[10px] text-stone-300 italic ml-2"></span>
                 </div>
                 <div className="text-[10px] text-stone-300 italic bg-stone-50 px-3 py-1 rounded-full">
                     設定タブで登録したキャラがここに表示されます
