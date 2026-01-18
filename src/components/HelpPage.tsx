@@ -71,6 +71,7 @@ const HelpPage: React.FC = () => {
 
         <div className="space-y-8">
           <h2 className="text-xl font-bold text-stone-600 border-l-4 border-rose-300 pl-4">メンバーシップのご案内</h2>
+          <p className="text-sm text-stone-500 mt-2 px-4">プロモードは現在開発中です。現時点ではスタンダード機能のみ利用できます。</p>
           <Card className="bg-gradient-to-br from-white to-rose-50/30">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <div className="space-y-4">
