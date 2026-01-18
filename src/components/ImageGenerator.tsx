@@ -115,7 +115,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
   const [style, setStyle] = useState<string>(mode === 'create' ? 'anime' : 'plushie');
   const [angle, setAngle] = useState<string>('auto');
   const [aspect, setAspect] = useState<'1:1' | '16:9' | '9:16'>('1:1');
-  const [useProModel, setUseProModel] = useState<boolean>(false);
+  const [useProModel] = useState<boolean>(false);
   const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('1K');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSummarizing, setIsSummarizing] = useState<boolean>(false);
