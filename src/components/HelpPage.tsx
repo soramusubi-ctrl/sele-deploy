@@ -100,10 +100,10 @@ const HelpPage: React.FC = () => {
                 </div>
                 <ul className="text-xs text-stone-400 space-y-2 list-disc pl-4">
                   <li>生成回数の制限なし</li>
-                  <li>最新の高画質モデル（Pro）の利用</li>
-                  <li>最大4K解像度での書き出し</li>
+                  <li>高画質モデル（Pro） 近日対応予定</li>
+                  <li>高解像度書き出し（最大4K） 対応予定</li>
                   <li>すべての特殊スタイルの解放</li>
-                  <li>先行機能へのアクセス</li>
+                  <li>先行機能の優先アクセス 予定</li>
                 </ul>
               </div>
             </div>

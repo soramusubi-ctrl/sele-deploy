@@ -511,16 +511,16 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             <Card className="bg-gradient-to-br from-white to-rose-50/30">
               <StepHeader num={6} title="描いてみせます" sub="(プロモード切り替え・最終描画)" />
               <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 bg-white/50 rounded-3xl border border-white shadow-sm">
+                <div className="flex items-center justify-between p-4 bg-white/50 rounded-3xl border border-white shadow-sm opacity-50 cursor-not-allowed">
                     <div className="flex items-center space-x-4">
                         <div className="p-2.5 bg-rose-400 rounded-full text-white shadow-md"><DiamondIcon /></div>
                         <div>
-                            <h3 className="text-[14px] font-bold text-stone-700">プロモード</h3>
+                            <h3 className="text-[14px] font-bold text-stone-700">プロモード <span className="ml-2 text-[10px] bg-stone-200 text-stone-400 px-2 py-0.5 rounded-full">Coming soon</span></h3>
                             <p className="text-[12px] text-stone-400">高画質モデル / 解像度選択</p>
                         </div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={useProModel} onChange={(e) => setUseProModel(e.target.checked)} disabled={isLoading}/>
+                        <input type="checkbox" className="sr-only peer" checked={false} disabled />
                         <div className="w-12 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-400"></div>
                     </label>
                 </div>
