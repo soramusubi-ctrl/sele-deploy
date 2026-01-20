@@ -243,6 +243,16 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         } else if (style === '3d-render') {
             finalPrompt = `「${prompt}」を、最新の3Dレンダリングスタイルで描いてください。\n            【質感】：サブサーフェス・スキャッタリングによる柔らかな肌、物理ベースのリアルな素材感。\n            【雰囲気】：ピクサーやドリームワークスのような、高品質な3Dアニメーション映画のワンシーン。\n            High-end 3D render, Octane render, Ray tracing, stylized character design, soft global illumination.`;
         } else if (style === 'other') {
+
+         } else if (style === 'anime') {
+  finalPrompt = `「${prompt}」を、現代的な“きらつや”アニメ調イラストで描いてください。
+【線】：シャープでクリーンな輪郭線。細部は描き込みつつ、線は整理されている。
+【塗り】：セル塗り＋柔らかいグラデーション。髪と瞳は強いハイライトでツヤ感。
+【光】：シネマティックな逆光・リムライト。ハイコントラスト。軽いブルーム（発光）表現。
+【空気】：微細な粒子（ちり・花びら・光の粒）で“きらめき”を演出。背景は奥行きとボケ感。
+Modern glossy anime illustration, clean lineart, cel shading with subtle gradients, strong rim light, bloom glow, sparkling particles, cinematic composition.`;
+}
+
   const variants = [
     {
       name: "JRPGファンタジー・コンセプトアート",
