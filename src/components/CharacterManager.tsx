@@ -42,11 +42,11 @@ const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, on
 
   const [previewUrl, setPreviewUrl] = useState('');
 
-  const handleGeneratePreview = async () => {
-    if (!newChar.name) return;
-    setIsGenerating(true);
-    try {
-          const subject =
+ const handleGeneratePreview = async () => {
+  if (!newChar.name) return;
+  setIsGenerating(true);
+  try {
+    const subject =
       newChar.type === 'human'
         ? `${newChar.name}, ${newChar.age} ${newChar.gender}`
         : newChar.type === 'animal'
@@ -60,26 +60,28 @@ const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, on
       newChar.type === 'object' ? 'material/appearance' :
       'fur/coat';
 
-    const prompt = `A high-quality character portrait of ${subject}.
+    const genPrompt = `A high-quality character portrait of ${subject}.
 Appearance: ${newChar.hair} ${hairLabel}, ${newChar.eyes} eyes.
 Atmosphere: ${newChar.vibe}.
 Special notes: ${newChar.notes}.
 Style: Soft and beautiful modern anime style, slightly realistic with transparent and delicate coloring.
 Luminous lighting, ethereal atmosphere, high detail, simple artistic background.`;
 
-      if (base64Data) {
-        // 生成された画像を圧縮して保存（ストレージ節約とAPI制限回避のため）
-        const rawUrl = `data:image/png;base64,${base64Data}`;
-        const compressedBlob = await compressImage(rawUrl, 1024, 0.8);
-        const compressedBase64 = await blobToBase64(compressedBlob);
-        setPreviewUrl(`data:image/webp;base64,${compressedBase64}`);
-      }
-    } catch (err) {
-      console.error("Character generation failed", err);
-    } finally {
-      setIsGenerating(false);
+    const base64Data = await generateImage(genPrompt, [], '1:1', false);
+
+    if (base64Data) {
+      const rawUrl = `data:image/png;base64,${base64Data}`;
+      const compressedBlob = await compressImage(rawUrl, 1024, 0.8);
+      const compressedBase64 = await blobToBase64(compressedBlob);
+      setPreviewUrl(`data:image/webp;base64,${compressedBase64}`);
     }
-  };
+  } catch (err) {
+    console.error("Character generation failed", err);
+  } finally {
+    setIsGenerating(false);
+  }
+};
+
 
   const handleSave = () => {
     if (!newChar.name || !previewUrl) return;
@@ -88,7 +90,17 @@ Luminous lighting, ethereal atmosphere, high detail, simple artistic background.
       ...newChar,
       imageUrl: previewUrl
     });
-    setNewChar({ name: '', age: '', gender: '', hair: '', eyes: '', vibe: '', notes: '' });
+    setNewChar({
+  type: 'human',
+  species: '',
+  name: '',
+  age: '',
+  gender: '',
+  hair: '',
+  eyes: '',
+  vibe: '',
+  notes: ''
+});
     setPreviewUrl('');
   };
 
