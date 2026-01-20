@@ -227,7 +227,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         } else if (style === 'manga') {
             finalPrompt = `Create a 4-panel manga (Yon-koma) layout telling a short story about: ${prompt}.\n            Style: Clean black and white manga art, expressive characters, speed lines, and sound effects (onomatopoeia in English like "POW", "WHOOSH", "ZAP").\n            Layout: 4 vertical panels with clear borders.`;
         } else if (style === 'sns-icons-12') {
-            finalPrompt = `Create a grid of 12 different high-quality SNS profile icons for: ${prompt}.\n            Style: Modern flat illustration, vibrant colors, varied expressions and poses.\n            Layout: 3x4 grid of circular or square icons.`;
+            finalPrompt = `Create a grid of 6 different high-quality SNS profile icons for: ${prompt}.\n            Style: Modern flat illustration, vibrant colors, varied expressions and poses.\n            Layout: 3x4 grid of circular or square icons.`;
         } else if (style === 'instruction-manual') {
             finalPrompt = `Create a retro video game instruction manual page for: ${prompt}.\n            Include: Character artwork, stat bars (HP, MP, ATK, DEF), and a brief description in a classic RPG font.\n            Style: 90s JRPG manual art, slightly weathered paper texture, pixel art elements.`;
         } else if (style === 'picture-book') {
