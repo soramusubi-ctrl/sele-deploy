@@ -46,16 +46,12 @@ const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, on
   if (!newChar.name) return;
   setIsGenerating(true);
   try {
-    const subject =
+   const subject =
       newChar.type === 'human'
         ? `${newChar.name}, ${newChar.age} ${newChar.gender}`
-        : newChar.type === 'animal'
-          ? `${newChar.name} (a ${newChar.species || 'animal'})`
-          : newChar.type === 'creature'
-            ? `${newChar.name} (a ${newChar.species || 'fantasy creature'}) `;
-
-    const hairLabel =
-      newChar.type === 'human' ? 'hair' :
+        : `${newChar.name} (a ${newChar.species || (newChar.type === 'animal' ? 'animal' : 'fantasy creature')})`;
+  
+     const hairLabel = newChar.type === 'human' ? 'hair' : 'fur/coat';
 
     const genPrompt = `A high-quality character portrait of ${subject}.
 Appearance: ${newChar.hair} ${hairLabel}, ${newChar.eyes} eyes.
