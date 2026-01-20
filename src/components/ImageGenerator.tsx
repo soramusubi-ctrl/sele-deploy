@@ -242,8 +242,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             finalPrompt = `「${prompt}」を、洗練された線画（ラインアート）スタイルで描いてください。\n            【技法】：強弱のある美しい主線、最小限の陰影、白場を活かした構成。\n            【雰囲気】：ミニマルでモダン、かつキャラクターの個性が際立つ表現。\n            Clean line art, minimalist style, elegant strokes, black and white with selective accents.`;
         } else if (style === '3d-render') {
             finalPrompt = `「${prompt}」を、最新の3Dレンダリングスタイルで描いてください。\n            【質感】：サブサーフェス・スキャッタリングによる柔らかな肌、物理ベースのリアルな素材感。\n            【雰囲気】：ピクサーやドリームワークスのような、高品質な3Dアニメーション映画のワンシーン。\n            High-end 3D render, Octane render, Ray tracing, stylized character design, soft global illumination.`;
-        }
-} else if (style === 'other') {
+        } else if (style === 'other') {
   const variants = [
     {
       name: "JRPGファンタジー・コンセプトアート",
