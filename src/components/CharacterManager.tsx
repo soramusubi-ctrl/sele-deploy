@@ -4,7 +4,7 @@ import Button from './Button';
 import Spinner from './Spinner';
 import { compressImage, blobToBase64 } from '../utils/imageUtils';
 
-type CharacterType = 'human' | 'animal' | 'creature' | 'object';
+type CharacterType = 'human' | 'animal' | 'creature';
 
 interface Character {
   id: string;
@@ -53,12 +53,10 @@ const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, on
           ? `${newChar.name} (a ${newChar.species || 'animal'})`
           : newChar.type === 'creature'
             ? `${newChar.name} (a ${newChar.species || 'fantasy creature'})`
-            : `${newChar.name} (an object)`;
+            ;
 
     const hairLabel =
       newChar.type === 'human' ? 'hair' :
-      newChar.type === 'object' ? 'material/appearance' :
-      'fur/coat';
 
     const genPrompt = `A high-quality character portrait of ${subject}.
 Appearance: ${newChar.hair} ${hairLabel}, ${newChar.eyes} eyes.
@@ -123,7 +121,7 @@ Luminous lighting, ethereal atmosphere, high detail, simple artistic background.
     <option value="human">人</option>
     <option value="animal">動物</option>
     <option value="creature">架空生物</option>
-    <option value="object">モノ</option>
+  
   </select>
 </div>
 
