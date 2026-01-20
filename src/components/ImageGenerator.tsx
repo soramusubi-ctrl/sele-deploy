@@ -60,7 +60,7 @@ const predefinedStyles = [
     { value: '3d-render', label: '3D', mode: 'create' },
     { value: 'plushie', label: 'ぬいぐるみ', mode: 'play' },
     { value: 'manga', label: '4コマ漫画', mode: 'play' },
-    { value: 'sns-icons-12', label: 'SNSアイコン(いろいろ)', mode: 'play' },
+    { value: 'sns-icons-6', label: 'SNSアイコン(いろいろ)', mode: 'play' },
     { value: 'instruction-manual', label: '攻略本風', mode: 'play' },
     { value: 'picture-book', label: '絵本の見開き', mode: 'play' },
     { value: 'other', label: 'その他', mode: 'both' },
@@ -243,6 +243,34 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         } else if (style === '3d-render') {
             finalPrompt = `「${prompt}」を、最新の3Dレンダリングスタイルで描いてください。\n            【質感】：サブサーフェス・スキャッタリングによる柔らかな肌、物理ベースのリアルな素材感。\n            【雰囲気】：ピクサーやドリームワークスのような、高品質な3Dアニメーション映画のワンシーン。\n            High-end 3D render, Octane render, Ray tracing, stylized character design, soft global illumination.`;
         }
+} else if (style === 'other') {
+  const variants = [
+    {
+      name: "JRPGファンタジー・コンセプトアート",
+      prompt: `「${prompt}」を、JRPGファンタジーのコンセプトアートとして描いてください。
+【雰囲気】：壮大、神秘的、冒険の始まり。ドラマチックな光。
+【描写】：緻密な背景、シネマティックな構図、空気遠近。`
+    },
+    {
+      name: "アメリカンコミック",
+      prompt: `「${prompt}」を、アメリカンコミック風に描いてください。
+【表現】：太めのインク線、強い陰影、ハーフトーン、ダイナミックな構図。`
+    },
+    {
+      name: "ぷっくりシール",
+      prompt: `「${prompt}」を、ぷっくりしたステッカー（シール）風に描いてください。
+【表現】：白フチ、つや、立体感、ポップで可愛いデフォルメ。背景はシンプル。`
+    },
+    {
+      name: "コルクボード写真",
+      prompt: `「${prompt}」を、コルクボードにピンで留めた写真のように描いてください。
+【表現】：少し色あせた写真質感、紙の縁、影、ピンやマスキングテープの演出。`
+    },
+  ];
+
+  const pick = variants[Math.floor(Math.random() * variants.length)];
+  finalPrompt = pick.prompt;
+}
 
         const base64 = await generateImage(finalPrompt, characterImages, aspect, useProModel, resolution, angle);
         const imageUrl = `data:image/png;base64,${base64}`;
