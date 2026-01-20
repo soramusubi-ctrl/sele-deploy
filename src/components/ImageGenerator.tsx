@@ -387,18 +387,17 @@ Modern glossy anime illustration, clean lineart, cel shading with subtle gradien
             {/* Step 2: 物語を紡ぐ */}
             <Card>
               <StepHeader num={2} title="物語を紡ぐ" sub="(今日の会話ログをコピペ)" />
-              <textarea
-                key="log-textarea"
-                ref={logRef}
-                value={log}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                  if (!(e.nativeEvent instanceof InputEvent) || !e.nativeEvent.isComposing) {
-                    setLog(e.target.value)
-                  }
-                }}
-                placeholder="心に残った会話や、日記の断片をここに..."
-                className="w-full h-32 p-4 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-rose-300 focus:outline-none transition-all text-sm leading-relaxed"
-              />
+             <textarea
+  key="log-textarea"
+  ref={logRef}
+  value={log}
+  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLog(e.target.value);
+  }}
+  placeholder="心に残った会話や、日記の断片をここに..."
+  className="w-full h-32 p-4 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-rose-300 focus:outline-none transition-all text-sm leading-relaxed"
+/>
+
               <div className="mt-4 flex flex-wrap gap-2">
                 {sampleConversations.map((p) => (
                   <button
