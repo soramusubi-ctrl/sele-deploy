@@ -490,6 +490,14 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                     <div className="absolute bottom-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button onClick={() => onStartEditing({ url: generatedImage || '', base64: '', mimeType: 'image/png' }, prompt, style, aspect)}>直す</Button>
                       {/* <Button onClick={() => onStartAnimating({ url: generatedImage, prompt, style, aspect })} size="sm">動かす</Button> */}
+                        <a
+  href={generatedImage}
+  download={`quiet-atelier-${Date.now()}.png`}
+  className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold hover:shadow-md transition"
+>
+  保存
+</a>
+
                     </div>
                     {guideInfo && (
                       <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-4 rounded-lg text-xs text-stone-700 space-y-2 max-w-xs">
