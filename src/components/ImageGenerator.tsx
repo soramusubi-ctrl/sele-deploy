@@ -231,7 +231,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         } else if (style === 'instruction-manual') {
             finalPrompt = `Create a retro video game instruction manual page for: ${prompt}.\n            Include: Character artwork, stat bars (HP, MP, ATK, DEF), and a brief description in a classic RPG font.\n            Style: 90s JRPG manual art, slightly weathered paper texture, pixel art elements.`;
         } else if (style === 'picture-book') {
-            finalPrompt = `Create a beautiful double-page spread for a children\'s picture book about: ${prompt}.\n            Style: Soft watercolor and colored pencil, whimsical atmosphere, large areas for text.\n            Include: A short poetic sentence in English at the bottom.`;
+            finalPrompt = `Create a beautiful double-page spread for a children\'s picture book about: ${prompt}.\n            Style: 木の机の上に置かれた、美しい絵本の見開きページ。Soft watercolor and colored pencil, whimsical atmosphere, large areas for text.\n            Include: A short poetic sentence in English at the bottom.`;
         } else if (style === 'watercolor') {
             finalPrompt = `「${prompt}」を、繊細な水彩画スタイルで描いてください。\n            【技法】：透明感のある色彩、美しい滲みとぼかし、手漉き紙の質感。\n            【雰囲気】：光が透き通るような、優しく穏やかな空気感。\n            Delicate watercolor painting, wet-on-wet technique, soft edges, paper texture.`;
         } else if (style === 'oil-painting') {
