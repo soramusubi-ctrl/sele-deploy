@@ -116,7 +116,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
   const [style, setStyle] = useState<string>(mode === 'create' ? 'anime' : 'plushie');
   const [angle, setAngle] = useState<string>('auto');
   const [aspect, setAspect] = useState<'1:1' | '16:9' | '9:16'>('1:1');
-  const [useProModel, setUseProModel] = useState<boolean>(false);
+  const [useProModel] = useState<boolean>(false);
   const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('1K');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSummarizing, setIsSummarizing] = useState<boolean>(false);
@@ -124,7 +124,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [guideInfo, setGuideInfo] = useState<LocalGuideInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [hasApiKey, setHasApiKey] = useState<boolean>(false);
+  
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const logRef = useRef<HTMLTextAreaElement>(null);
 
@@ -132,25 +132,9 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
     setStyle(mode === 'create' ? 'anime' : 'plushie');
   }, [mode]);
 
-  useEffect(() => {
-    const checkApiKey = async () => {
-        const aistudio = (window as any).aistudio;
-        if (aistudio?.hasSelectedApiKey) {
-            const hasKey = await aistudio.hasSelectedApiKey();
-            setHasApiKey(hasKey);
-        }
-    };
-    checkApiKey();
-  }, []);
+  
 
-  const handleSelectKey = async () => {
-    const aistudio = (window as any).aistudio;
-    if (aistudio?.selectApiKey) {
-        await aistudio.selectApiKey();
-        const hasKey = await aistudio.hasSelectedApiKey();
-        setHasApiKey(hasKey);
-    }
-  };
+  
 
 
 
@@ -471,7 +455,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                     <span className="text-xs bg-rose-400 text-white px-2 py-0.5 rounded-full">Coming soon</span>
                   </div>
                   <div className="relative w-12 h-6">
-                    <input type="checkbox" id="pro-toggle" className="sr-only" checked={useProModel} onChange={() => setUseProModel(!useProModel)} disabled />
+                    <input type="checkbox" id="pro-toggle" className="sr-only" checked={useProModel}  disabled />
                     <div className="block bg-stone-200 w-12 h-6 rounded-full"></div>
                     <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
                   </div>
@@ -483,13 +467,9 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                 </div>
               </div>
               <div className="mt-6">
-                {!hasApiKey ? (
-                  <Button onClick={handleSelectKey} className="w-full">APIキーを設定</Button>
-                ) : (
-                  <Button onClick={handleGenerate} disabled={isLoading} className="w-full">
+                <Button onClick={handleGenerate} disabled={isLoading} className="w-full">
                     {isLoading ? <Spinner /> : '🖌️ 描き起こす'}
                   </Button>
-                )}
               </div>
               {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
               <p className="text-xs text-stone-400 text-center mt-2">1日の生成回数: 残り {getRemainingGenerations()} 回</p>
