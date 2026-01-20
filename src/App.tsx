@@ -18,6 +18,8 @@ export interface ImageForEditing {
 export interface CharacterState {
   id: string;
   name: string;
+  type: 'human',        
+  species: '',       
   isActive: boolean;
   images: ImageForEditing[];
   // New fields for generated characters
