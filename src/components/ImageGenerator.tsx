@@ -60,7 +60,7 @@ const predefinedStyles = [
     { value: '3d-render', label: '3D', mode: 'create' },
     { value: 'plushie', label: 'ぬいぐるみ', mode: 'play' },
     { value: 'manga', label: '4コマ漫画', mode: 'play' },
-    { value: 'sns-icons-12', label: 'SNSアイコン(12種)', mode: 'play' },
+    { value: 'sns-icons-12', label: 'SNSアイコン(いろいろ)', mode: 'play' },
     { value: 'instruction-manual', label: '攻略本風', mode: 'play' },
     { value: 'picture-book', label: '絵本の見開き', mode: 'play' },
     { value: 'other', label: 'その他', mode: 'both' },
