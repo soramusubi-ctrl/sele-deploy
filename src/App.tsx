@@ -14,15 +14,15 @@ export interface ImageForEditing {
   base64: string;
   mimeType: string;
 }
+export type CharacterType = 'human' | 'animal' | 'creature' | 'object';
 
 export interface CharacterState {
   id: string;
   name: string;
-  type: 'human',        
-  species: '',       
+  type: CharacterType;   
+  species: string;       
   isActive: boolean;
   images: ImageForEditing[];
-  // New fields for generated characters
   age?: string;
   gender?: string;
   hair?: string;
@@ -88,18 +88,30 @@ const App: React.FC = () => {
               imageUrl: c.images[0]?.url || ''
             }))}
             onSave={(newChar) => {
-              const charState: CharacterState = {
-                id: newChar.id,
-                name: newChar.name,
-                isActive: true,
-                images: [{ url: newChar.imageUrl, base64: '', mimeType: 'image/png' }],
-                age: newChar.age,
-                gender: newChar.gender,
-                hair: newChar.hair,
-                eyes: newChar.eyes,
-                vibe: newChar.vibe,
-                notes: newChar.notes
-              };
+             const charState: CharacterState = {
+  id: newChar.id,
+  name: newChar.name,
+  type: newChar.type ?? 'human',
+  species: newChar.species ?? '',
+  isActive: true,
+  images: [{ url: newChar.imageUrl, base64: '', mimeType: 'image/png' }],
+  age: newChar.age,
+  gender: newChar.gender,
+  hair: newChar.hair,
+  eyes: newChar.eyes,
+  vibe: newChar.vibe,
+  notes: newChar.notes
+};
+const [characters, setCharacters] = useState<CharacterState[]>(() => {
+  const saved = localStorage.getItem('painter-characters');
+  const parsed = saved ? JSON.parse(saved) : [];
+  return parsed.map((c: any) => ({
+    type: 'human',
+    species: '',
+    ...c,
+  }));
+});
+
               setCharacters(prev => [...prev, charState]);
             }}
             onDelete={(id) => {
