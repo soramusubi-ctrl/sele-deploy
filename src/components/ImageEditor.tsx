@@ -117,7 +117,7 @@ interface Layer {
 }
 
 interface ImageEditorProps {
-    imageToEdit: ImageForEditing | null;
+    imageToEdit: (ImageForEditing & { prompt?: string; style?: string; aspect?: string; }) | null;
     onEditingComplete: () => void;
 }
 

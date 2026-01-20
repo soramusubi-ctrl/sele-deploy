@@ -31,7 +31,7 @@ export interface CharacterState {
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('create');
-  const [imageToEdit, setImageToEdit] = useState<ImageForEditing | null>(null);
+  const [imageToEdit, setImageToEdit] = useState<(ImageForEditing & { prompt?: string; style?: string; aspect?: string; }) | null>(null);
   const [imageToAnimate, setImageToAnimate] = useState<ImageForEditing | null>(null);
   const [characters, setCharacters] = useState<CharacterState[]>(() => {
     const saved = localStorage.getItem('painter-characters');
@@ -42,8 +42,8 @@ const App: React.FC = () => {
     localStorage.setItem('painter-characters', JSON.stringify(characters));
   }, [characters]);
 
-  const handleStartEditing = (image: ImageForEditing) => {
-    setImageToEdit(image);
+  const handleStartEditing = (image: ImageForEditing, prompt: string, style: string, aspect: string) => {
+    setImageToEdit({ ...image, prompt, style, aspect });
     setActiveTab('edit');
   };
 

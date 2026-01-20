@@ -106,7 +106,7 @@ interface ImageGeneratorProps {
   mode: 'create' | 'play';
   characters: CharacterState[];
   setCharacters: React.Dispatch<React.SetStateAction<CharacterState[]>>;
-  onStartEditing: (image: ImageForEditing) => void;
+  onStartEditing: (image: ImageForEditing, prompt: string, style: string, aspect: string) => void;
   onStartAnimating: (image: ImageForEditing) => void;
 }
 
@@ -116,16 +116,17 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
   const [style, setStyle] = useState<string>(mode === 'create' ? 'anime' : 'plushie');
   const [angle, setAngle] = useState<string>('auto');
   const [aspect, setAspect] = useState<'1:1' | '16:9' | '9:16'>('1:1');
-  const [useProModel] = useState<boolean>(false);
+  const [useProModel, setUseProModel] = useState<boolean>(false);
   const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('1K');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSummarizing, setIsSummarizing] = useState<boolean>(false);
-  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [, setIsAnalyzing] = useState<boolean>(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [guideInfo, setGuideInfo] = useState<LocalGuideInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState<boolean>(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
+  const logRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setStyle(mode === 'create' ? 'anime' : 'plushie');
@@ -297,13 +298,26 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
   };
 
   const filteredStyles = predefinedStyles.filter(s => s.mode === mode || s.mode === 'both');
-  const activeCharacters = characters.filter(c => c.isActive);
 
-  const samplePrompts = [
-    { label: "幻想的な森", text: "A mystical forest with glowing mushrooms and floating fireflies, ethereal lighting, soft focus background" },
-    { label: "海辺のカフェ", text: "A cozy seaside cafe at sunset, warm golden hour light, sparkling ocean waves, peaceful atmosphere" },
-    { label: "星空の図書室", text: "A grand library with a glass ceiling showing a starry night sky, floating books, magical blue aura" }
+  const sampleConversations = [
+    { label: "Cute Animals", text: "A: ねえ見て、子犬が子猫のしっぽ追いかけてる。\nB: うそ、可愛すぎ。こっち来た…！\nA: 縁側の光があったかいね。毛がふわって光ってる。\nB: 小鳥まで寄ってきた。パンくず狙ってる顔してる。\nA: マグの湯気がふわっと上がって、空気が甘い匂い。\nB: この瞬間、写真じゃなくて絵にしたい。" },
+    { label: "Candy Castle", text: "A: あそこ…お菓子でできた城じゃない？\nB: 塔がアイシングで、窓が飴…光ってる。\nA: 足元、チョコの川。橋はクッキーだ。\nB: 綿あめみたいな雲がちぎれて流れてる。\nA: 近づくとキャラメルの匂いが濃くなる…食べたい。\nB: 今日は冒険より、味見が先かもね。" },
+    { label: "Fantasy Adventure", text: "A: 崖の上だ。下は霧で見えない。\nB: 風が強い…手、離さないで。\nA: 遠くに古い塔。稲妻で一瞬だけ輪郭が見えた。\nB: 行くなら今。夜が濃くなる前に。\nA: 足元の草が光ってる…魔法陣みたいだ。\nB: 私たち、ちゃんと帰れるかな。" },
+    { label: "After School", text: "A: 放課後の廊下、誰もいないね。\nB: 窓の光だけ。靴音がやけに響く。\nA: さっきの一言、言いすぎた。ごめん。\nB: びっくりしただけ。嫌いになったわけじゃない。\nA: じゃあ、帰り道…少しだけ一緒に歩く？\nB: …うん。雨の匂いするね。" }
   ];
+
+  const handleSampleClick = (text: string) => {
+    if (prompt) {
+      if (window.confirm("現在のプロンプトが上書きされます。新しいサンプルで始めますか？")) {
+        setPrompt('');
+        setLog(text);
+        logRef.current?.focus();
+      }
+    } else {
+      setLog(text);
+      logRef.current?.focus();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#fdfaf7] px-4 py-12">
@@ -345,15 +359,27 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
               <StepHeader num={2} title="物語を紡ぐ" sub="(今日の会話ログをコピペ)" />
               <textarea
                 key="log-textarea"
+                ref={logRef}
                 value={log}
-                onChange={(e) => {
-                  if (!e.nativeEvent.isComposing) {
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                  if (!(e.nativeEvent instanceof InputEvent) || !e.nativeEvent.isComposing) {
                     setLog(e.target.value)
                   }
                 }}
                 placeholder="心に残った会話や、日記の断片をここに..."
                 className="w-full h-32 p-4 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-rose-300 focus:outline-none transition-all text-sm leading-relaxed"
               />
+              <div className="mt-4 flex flex-wrap gap-2">
+                {sampleConversations.map((p) => (
+                  <button
+                    key={p.label}
+                    onClick={() => handleSampleClick(p.text)}
+                    className="text-xs bg-stone-100 text-stone-500 px-3 py-1 rounded-full hover:bg-rose-100 hover:text-rose-500 transition-all"
+                  >
+                    {p.label} を試す
+                  </button>
+                ))}
+              </div>
               <div className="mt-2">
                 <Button 
                   onClick={handleSummarize}
@@ -399,25 +425,14 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                 key="prompt-textarea"
                 ref={promptRef}
                 value={prompt}
-                onChange={(e) => {
-                  if (!e.nativeEvent.isComposing) {
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                  if (!(e.nativeEvent instanceof InputEvent) || !e.nativeEvent.isComposing) {
                     setPrompt(e.target.value)
                   }
                 }}
                 placeholder="描きたい情景の、具体的な筆致をここに..."
                 className="w-full h-48 p-4 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-rose-300 focus:outline-none transition-all text-sm leading-relaxed"
               />
-              <div className="mt-4 flex flex-wrap gap-2">
-                {samplePrompts.map((p) => (
-                  <button
-                    key={p.label}
-                    onClick={() => setPrompt(p.text)}
-                    className="text-xs bg-stone-100 text-stone-500 px-3 py-1 rounded-full hover:bg-rose-100 hover:text-rose-500 transition-all"
-                  >
-                    {p.label} を試す
-                  </button>
-                ))}
-              </div>
             </Card>
 
             {/* Step 5: お好きなスタイルで */}
@@ -456,7 +471,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                     <span className="text-xs bg-rose-400 text-white px-2 py-0.5 rounded-full">Coming soon</span>
                   </div>
                   <div className="relative w-12 h-6">
-                    <input type="checkbox" id="pro-toggle" className="sr-only" checked={useProModel} disabled />
+                    <input type="checkbox" id="pro-toggle" className="sr-only" checked={useProModel} onChange={() => setUseProModel(!useProModel)} disabled />
                     <div className="block bg-stone-200 w-12 h-6 rounded-full"></div>
                     <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
                   </div>
@@ -493,7 +508,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
                   <div className="relative w-full h-full group">
                     <img src={generatedImage} alt="Generated art" className="w-full h-full object-contain" />
                     <div className="absolute bottom-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button onClick={() => onStartEditing({ url: generatedImage, prompt, style, aspect })} size="sm">直す</Button>
+                      <Button onClick={() => onStartEditing({ url: generatedImage || '', base64: '', mimeType: 'image/png' }, prompt, style, aspect)}>直す</Button>
                       {/* <Button onClick={() => onStartAnimating({ url: generatedImage, prompt, style, aspect })} size="sm">動かす</Button> */}
                     </div>
                     {guideInfo && (
