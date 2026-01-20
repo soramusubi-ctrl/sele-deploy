@@ -105,15 +105,7 @@ const App: React.FC = () => {
   vibe: newChar.vibe,
   notes: newChar.notes
 };
-const [characters, setCharacters] = useState<CharacterState[]>(() => {
-  const saved = localStorage.getItem('painter-characters');
-  const parsed = saved ? JSON.parse(saved) : [];
-  return parsed.map((c: any) => ({
-    type: 'human',
-    species: '',
-    ...c,
-  }));
-});
+
 
               setCharacters(prev => [...prev, charState]);
             }}
