@@ -225,8 +225,8 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
             const charNames = activeCharacters.map(c => `「${c.name}」`).join('や');
             finalPrompt = `Create an adorable high-quality plushie ${charNames ? `modeled after ${charNames}` : ''}.\n            The character should be a soft, huggable stuffed toy with visible fabric texture, stitching details, and cute button eyes.\n            Style: Soft toy photography, studio lighting, macro shot, felt and cotton texture.\n            Prompt: ${prompt}`;
         } else if (style === 'manga') {
-            finalPrompt = `Create a 4-panel manga (Yon-koma) layout telling a short story about: ${prompt}.\n            Style: Clean black and white manga art, expressive characters, speed lines, and sound effects (onomatopoeia in English like "POW", "WHOOSH", "ZAP").\n            Layout: 4 vertical panels with clear borders.`;
-        } else if (style === 'sns-icons-12') {
+            finalPrompt = `Create a 4-panel manga (Yon-koma) layout telling a short story about: ${prompt}.\n            Style: Clean black and white manga art, expressive characters, speed lines, and sound effects (onomatopoeia in English like "POW", "WHOOSH", "ZAP").\n    【構成】：物語が1コマ目から順に「起（導入）」「承（展開）」「転（変化）」「結（結末）」の4つのコマ割りで進むように描いてください。        Layout: 4 vertical panels with clear borders.`;
+        } else if (style === 'sns-icons-6') {
             finalPrompt = `Create a grid of 6 different high-quality SNS profile icons for: ${prompt}.\n            Style: Modern flat illustration, vibrant colors, varied expressions and poses.\n            Layout: 3x4 grid of circular or square icons.`;
         } else if (style === 'instruction-manual') {
             finalPrompt = `Create a retro video game instruction manual page for: ${prompt}.\n            Include: Character artwork, stat bars (HP, MP, ATK, DEF), and a brief description in a classic RPG font.\n            Style: 90s JRPG manual art, slightly weathered paper texture, pixel art elements.`;
@@ -237,7 +237,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCh
         } else if (style === 'oil-painting') {
             finalPrompt = `「${prompt}」を、重厚な油彩画スタイルで描いてください。\n            【技法】：力強い筆致（インパスト）、豊かな色彩の重なり、キャンバスの布目。\n            【雰囲気】：古典的で格調高く、光と影のコントラストが際立つ表現。\n            Classic oil painting, thick brushstrokes, impasto technique, canvas texture, dramatic lighting.`;
         } else if (style === 'chibi') {
-            finalPrompt = `「${prompt}」を、愛らしいちびキャラ（2頭身）スタイルで描いてください。\n            【特徴】：大きな瞳、デフォルメされた体型、ポップで明るい配色。\n            【雰囲気】：元気いっぱいで、見ているだけで癒されるような可愛さ。\n            Cute chibi style, super deformed, big expressive eyes, vibrant colors, kawaii aesthetic.`;
+            finalPrompt = `「${prompt}」を、愛らしいちびキャラ（2頭身）スタイルで描いてください。\n            【特徴】：大きな瞳、デフォルメされた体型、ポップで明るい配色。\n            【雰囲気】：かわいらしく、見ているだけで癒されるような可愛さ。\n            Cute chibi style, super deformed, big expressive eyes, vibrant colors, kawaii aesthetic.`;
         } else if (style === 'line-art') {
             finalPrompt = `「${prompt}」を、洗練された線画（ラインアート）スタイルで描いてください。\n            【技法】：強弱のある美しい主線、最小限の陰影、白場を活かした構成。\n            【雰囲気】：ミニマルでモダン、かつキャラクターの個性が際立つ表現。\n            Clean line art, minimalist style, elegant strokes, black and white with selective accents.`;
         } else if (style === '3d-render') {
