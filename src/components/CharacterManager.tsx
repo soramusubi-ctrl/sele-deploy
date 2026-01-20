@@ -4,12 +4,16 @@ import Button from './Button';
 import Spinner from './Spinner';
 import { compressImage, blobToBase64 } from '../utils/imageUtils';
 
+type CharacterType = 'human' | 'animal' | 'creature' | 'object';
+
 interface Character {
   id: string;
+  type: CharacterType;  
+  species?: string;      
   name: string;
   age: string;
   gender: string;
-  hair: string;
+  hair: string;          
   eyes: string;
   vibe: string;
   notes: string;
@@ -25,14 +29,17 @@ interface CharacterManagerProps {
 const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, onSave, onDelete }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [newChar, setNewChar] = useState({
-    name: '',
-    age: '',
-    gender: '',
-    hair: '',
-    eyes: '',
-    vibe: '',
-    notes: ''
-  });
+  type: 'human' as CharacterType, 
+  species: '',                      
+  name: '',
+  age: '',
+  gender: '',
+  hair: '',
+  eyes: '',
+  vibe: '',
+  notes: ''
+});
+
   const [previewUrl, setPreviewUrl] = useState('');
 
   const handleGeneratePreview = async () => {
@@ -80,6 +87,32 @@ const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, on
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-8">
         {/* Input Form */}
+<div>
+  <label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest block mb-1">種別</label>
+  <select
+    value={newChar.type}
+    onChange={(e) => setNewChar({ ...newChar, type: e.target.value as CharacterType })}
+    className="w-full bg-stone-50 rounded-xl p-3 text-[14px] outline-none border border-transparent focus:border-rose-100"
+  >
+    <option value="human">人</option>
+    <option value="animal">動物</option>
+    <option value="creature">架空生物</option>
+    <option value="object">モノ</option>
+  </select>
+</div>
+
+{(newChar.type === 'animal' || newChar.type === 'creature') && (
+  <div>
+    <label className="text-[10px] font-bold text-rose-400 uppercase tracking-widest block mb-1">種族</label>
+    <input
+      value={newChar.species}
+      onChange={(e) => setNewChar({ ...newChar, species: e.target.value })}
+      className="w-full bg-stone-50 rounded-xl p-3 text-[14px] outline-none border border-transparent focus:border-rose-100"
+      placeholder="例: 猫、柴犬、狐、ドラゴン"
+    />
+  </div>
+)}
+
         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-stone-50 space-y-4">
           <div className="space-y-4">
             <div>
