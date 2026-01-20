@@ -72,8 +72,8 @@ const predefinedEdits = [
     icon: <SmileIcon />,
   },
   {
-    label: 'びっくり',
-    prompt: '被写体を驚いた表情にしてください',
+    label: '見つめ合う',
+    prompt: '被写体が見つめ合う表情にしてください',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -81,8 +81,8 @@ const predefinedEdits = [
     ),
   },
     {
-    label: 'かなしみ',
-    prompt: '被写体を悲しい表情にしてください',
+    label: '着替え',
+    prompt: '被写体の服装を背景の雰囲気に合わせて変えてください',
     icon: (
          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
              <path strokeLinecap="round" strokeLinejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" transform="scale(1, -1) translate(0, -24)" />
