@@ -46,13 +46,27 @@ const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, on
     if (!newChar.name) return;
     setIsGenerating(true);
     try {
-      const prompt = `A high-quality character portrait of ${newChar.name}, ${newChar.age} ${newChar.gender}. 
-      Appearance: ${newChar.hair} hair, ${newChar.eyes} eyes. 
-      Atmosphere: ${newChar.vibe}. 
-      Special notes: ${newChar.notes}. 
-      Style: Soft and beautiful modern anime style, slightly realistic with transparent and delicate coloring. 
-      Luminous lighting, ethereal atmosphere, high detail, simple artistic background.`;
-      const base64Data = await generateImage(prompt, [], '1:1', false);
+          const subject =
+      newChar.type === 'human'
+        ? `${newChar.name}, ${newChar.age} ${newChar.gender}`
+        : newChar.type === 'animal'
+          ? `${newChar.name} (a ${newChar.species || 'animal'})`
+          : newChar.type === 'creature'
+            ? `${newChar.name} (a ${newChar.species || 'fantasy creature'})`
+            : `${newChar.name} (an object)`;
+
+    const hairLabel =
+      newChar.type === 'human' ? 'hair' :
+      newChar.type === 'object' ? 'material/appearance' :
+      'fur/coat';
+
+    const prompt = `A high-quality character portrait of ${subject}.
+Appearance: ${newChar.hair} ${hairLabel}, ${newChar.eyes} eyes.
+Atmosphere: ${newChar.vibe}.
+Special notes: ${newChar.notes}.
+Style: Soft and beautiful modern anime style, slightly realistic with transparent and delicate coloring.
+Luminous lighting, ethereal atmosphere, high detail, simple artistic background.`;
+
       if (base64Data) {
         // 生成された画像を圧縮して保存（ストレージ節約とAPI制限回避のため）
         const rawUrl = `data:image/png;base64,${base64Data}`;
