@@ -19,8 +19,8 @@ export type CharacterType = 'human' | 'animal' | 'creature' | 'object';
 export interface CharacterState {
   id: string;
   name: string;
-  type: CharacterType;   
-  species: string;       
+  type: CharacterType;
+  species: string;
   isActive: boolean;
   images: ImageForEditing[];
   age?: string;
@@ -76,17 +76,20 @@ const App: React.FC = () => {
       case 'characters':
         return (
           <CharacterManager 
-            savedCharacters={characters.map(c => ({
-              id: c.id,
-              name: c.name,
-              age: c.age || '',
-              gender: c.gender || '',
-              hair: c.hair || '',
-              eyes: c.eyes || '',
-              vibe: c.vibe || '',
-              notes: c.notes || '',
-              imageUrl: c.images[0]?.url || ''
-            }))}
+           savedCharacters={characters.map(c => ({
+  id: c.id,
+  type: c.type ?? 'human',
+  species: c.species ?? '',
+  name: c.name,
+  age: c.age || '',
+  gender: c.gender || '',
+  hair: c.hair || '',
+  eyes: c.eyes || '',
+  vibe: c.vibe || '',
+  notes: c.notes || '',
+  imageUrl: c.images[0]?.url || ''
+}))}
+
             onSave={(newChar) => {
              const charState: CharacterState = {
   id: newChar.id,
