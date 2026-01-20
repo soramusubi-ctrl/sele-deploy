@@ -52,8 +52,7 @@ const CharacterManager: React.FC<CharacterManagerProps> = ({ savedCharacters, on
         : newChar.type === 'animal'
           ? `${newChar.name} (a ${newChar.species || 'animal'})`
           : newChar.type === 'creature'
-            ? `${newChar.name} (a ${newChar.species || 'fantasy creature'})`
-            ;
+            ? `${newChar.name} (a ${newChar.species || 'fantasy creature'}) `;
 
     const hairLabel =
       newChar.type === 'human' ? 'hair' :
