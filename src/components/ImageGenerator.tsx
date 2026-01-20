@@ -451,17 +451,16 @@ Modern glossy anime illustration, clean lineart, cel shading with subtle gradien
             <Card>
               <StepHeader num={4} title="こんなシーンでどう？" sub="(プロンプト生成・編集)" />
               <textarea
-                key="prompt-textarea"
-                ref={promptRef}
-                value={prompt}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                  if (!(e.nativeEvent instanceof InputEvent) || !e.nativeEvent.isComposing) {
-                    setPrompt(e.target.value)
-                  }
-                }}
-                placeholder="描きたい情景の、具体的な筆致をここに..."
-                className="w-full h-48 p-4 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-rose-300 focus:outline-none transition-all text-sm leading-relaxed"
-              />
+  key="prompt-textarea"
+  ref={promptRef}
+  value={prompt}
+  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPrompt(e.target.value);
+  }}
+  placeholder="描きたい情景の、具体的な筆致をここに..."
+  className="w-full h-48 p-4 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-rose-300 focus:outline-none transition-all text-sm leading-relaxed"
+/>
+
             </Card>
 
             {/* Step 5: お好きなスタイルで */}
