@@ -3,7 +3,7 @@ import { getAuth, Auth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "", // 環境変数から取得、なければ空文字
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || ""AIzaSyCvJd01GQ-x1vHRNBxYYeF0GjFbODlIgSQ"", 
   authDomain: "soraai-858d3.firebaseapp.com",
   projectId: "soraai-858d3",
   storageBucket: "soraai-858d3.appspot.com",
