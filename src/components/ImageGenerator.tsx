@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+
+
 import { generateImage, summarizeConversation, analyzeGuideImage, GuideInfo as GeminiGuideInfo } from '../services/geminiService';
 import Button from './Button';
 import Spinner from './Spinner';
@@ -111,6 +113,7 @@ interface ImageGeneratorProps {
 }
 
 const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCharacters, onStartEditing, onStartAnimating: _onStartAnimating }) => {
+  
   const [prompt, setPrompt] = useState<string>('');
   const [log, setLog] = useState<string>('');
   const [style, setStyle] = useState<string>(mode === 'create' ? 'anime' : 'plushie');
@@ -327,7 +330,9 @@ Modern glossy anime illustration, clean lineart, cel shading with subtle gradien
     }
   };
 
-  const filteredStyles = predefinedStyles.filter(s => s.mode === mode || s.mode === 'both');
+    const filteredStyles = predefinedStyles.filter(s => s.mode === mode || s.mode === 'both');
+
+  
 
   const sampleConversations = [
     { label: "Cute Animals", text: "A: ねえ見て、子犬が子猫のしっぽ追いかけてる。\nB: うそ、可愛すぎ。こっち来た…！\nA: 縁側の光があったかいね。毛がふわって光ってる。\nB: 小鳥まで寄ってきた。パンくず狙ってる顔してる。\nA: マグの湯気がふわっと上がって、空気が甘い匂い。\nB: この瞬間、写真じゃなくて絵にしたい。" },
@@ -348,6 +353,8 @@ Modern glossy anime illustration, clean lineart, cel shading with subtle gradien
       logRef.current?.focus();
     }
   };
+
+    
 
   return (
     <div className="min-h-screen bg-[#fdfaf7] px-4 py-12">

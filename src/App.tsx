@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Header from './components/Header';
 import ImageGenerator from './components/ImageGenerator';
 import ImageEditor from './components/ImageEditor';
 import VideoGenerator from './components/VideoGenerator';
 import HelpPage from './components/HelpPage';
 import CharacterManager from './components/CharacterManager';
+import LoginScreen from './components/LoginScreen';
 
 export type Tab = 'create' | 'play' | 'edit' | 'animate' | 'help' | 'characters';
 
@@ -20,7 +21,6 @@ export interface CharacterState {
   name: string;
   isActive: boolean;
   images: ImageForEditing[];
-  // New fields for generated characters
   age?: string;
   gender?: string;
   hair?: string;
@@ -29,7 +29,8 @@ export interface CharacterState {
   notes?: string;
 }
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('create');
   const [imageToEdit, setImageToEdit] = useState<(ImageForEditing & { prompt?: string; style?: string; aspect?: string; }) | null>(null);
   const [imageToAnimate, setImageToAnimate] = useState<ImageForEditing | null>(null);
@@ -115,13 +116,21 @@ const App: React.FC = () => {
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
-          {renderContent()}
+          {currentUser ? renderContent() : <LoginScreen />}
         </div>
       </main>
       <footer className="text-center p-12 text-stone-300 text-xs tracking-widest">
         <p>QUIET ATELIER &copy; 2025</p>
       </footer>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 
