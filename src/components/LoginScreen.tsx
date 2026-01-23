@@ -26,7 +26,12 @@ const LoginScreen: React.FC = () => {
     setError(null);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "../lib/firebase"; // 例
+
+const provider = new GoogleAuthProvider();
+await signInWithPopup(auth, provider);
+
     } catch (err) {
       console.error("Error during Google login:", err);
       if (err instanceof Error) {
