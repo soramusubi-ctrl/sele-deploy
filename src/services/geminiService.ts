@@ -150,7 +150,7 @@ export const generateImage = async (
     const ai = getAiClient();
     try {
         return await withRetry(async (): Promise<string> => {
-            const model = useProModel ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
+            const model = useProModel ? 'gemini-3-pro-image-preview' : 'gemini-3.1-flash-image-preview';
             let fullPrompt = prompt;
             const parts: any[] = [];
 
@@ -195,7 +195,7 @@ export const editImage = async (prompt: string, imageBase64: string, mimeType: s
     const ai = getAiClient();
     try {
         return await withRetry(async (): Promise<string> => {
-            const model = useProModel ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
+            const model = useProModel ? 'gemini-3-pro-image-preview' : 'gemini-3.1-flash-image-preview';
             const response = await ai.models.generateContent({
                 model,
                 contents: { parts: [{ inlineData: { data: imageBase64, mimeType } }, { text: prompt }] },
