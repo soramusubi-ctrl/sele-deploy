@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ImageForEditing } from '../App';
 import Button from './Button';
 import Card from './Card';
@@ -16,9 +16,35 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
   const [isGenerating, setIsGenerating] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState('');
+  const [sourceImage, setSourceImage] = useState<ImageForEditing | null>(imageToAnimate);
+
+  useEffect(() => {
+    setSourceImage(imageToAnimate);
+  }, [imageToAnimate]);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('画像ファイルを選択してください。');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = String(reader.result);
+      setSourceImage({
+        url,
+        base64: url.replace(/^data:image\/[^;]+;base64,/, ''),
+        mimeType: file.type,
+      });
+      setVideoUrl(null);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleGenerate = async () => {
-    if (!imageToAnimate || !prompt.trim()) return;
+    if (!sourceImage || !prompt.trim()) return;
     
     setIsGenerating(true);
     setVideoUrl(null);
@@ -27,8 +53,8 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
     try {
       const url = await generateVideo(
         prompt,
-        imageToAnimate.base64,
-        imageToAnimate.mimeType,
+        sourceImage.base64,
+        sourceImage.mimeType,
         aspectRatio,
         setProgressMessage
       );
@@ -47,13 +73,21 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
       <Card>
         <h2 className="text-2xl font-bold mb-4 text-stone-700">アニメーション生成</h2>
         
-        {imageToAnimate && (
+        {sourceImage ? (
           <div className="mb-4">
             <img 
-              src={imageToAnimate.url} 
+              src={sourceImage.url}
               alt="元画像" 
               className="max-w-full h-auto rounded-lg shadow-md"
             />
+          </div>
+        ) : (
+          <div className="mb-4 rounded-lg border-2 border-dashed border-stone-200 p-6 text-center">
+            <label className="cursor-pointer font-bold text-rose-500 hover:text-rose-600">
+              動かす画像を選ぶ
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="sr-only" />
+            </label>
+            <p className="mt-2 text-xs text-stone-400">PNG、JPEG、WebPなどの画像に対応</p>
           </div>
         )}
 
@@ -97,7 +131,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
           <div className="flex gap-2">
             <Button
               onClick={handleGenerate}
-              disabled={isGenerating || !prompt.trim()}
+              disabled={isGenerating || !sourceImage || !prompt.trim()}
               className="flex-1"
             >
               {isGenerating ? <Spinner /> : 'アニメーション生成'}
@@ -110,6 +144,10 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
               戻る
             </Button>
           </div>
+
+          <p className="text-xs text-stone-400">
+            Veo 3.1 Lite（720p）を使用します。動画生成には有料のGemini API設定が必要です。
+          </p>
 
           {progressMessage && (
             <div className="text-center text-sm text-stone-500">

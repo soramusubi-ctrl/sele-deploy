@@ -110,7 +110,7 @@ interface ImageGeneratorProps {
   onStartAnimating: (image: ImageForEditing) => void;
 }
 
-const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCharacters, onStartEditing, onStartAnimating: _onStartAnimating }) => {
+const ImageGenerator: React.FC<ImageGeneratorProps> = ({ mode, characters, setCharacters, onStartEditing, onStartAnimating }) => {
   const [prompt, setPrompt] = useState<string>('');
   const [log, setLog] = useState<string>('');
   const [style, setStyle] = useState<string>(mode === 'create' ? 'anime' : 'plushie');
@@ -533,7 +533,11 @@ Modern glossy anime illustration, clean lineart, cel shading with subtle gradien
                     <img src={generatedImage} alt="Generated art" className="w-full h-full object-contain" />
                     <div className="absolute bottom-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button onClick={() => onStartEditing({ url: generatedImage || '', base64: '', mimeType: 'image/png' }, prompt, style, aspect)}>直す</Button>
-                      {/* <Button onClick={() => onStartAnimating({ url: generatedImage, prompt, style, aspect })} size="sm">動かす</Button> */}
+                      <Button onClick={() => onStartAnimating({
+                        url: generatedImage,
+                        base64: generatedImage.replace(/^data:image\/[^;]+;base64,/, ''),
+                        mimeType: generatedImage.match(/^data:(image\/[^;]+);base64,/)?.[1] || 'image/png'
+                      })}>動かす</Button>
                         <a
   href={generatedImage}
   download={`quiet-atelier-${Date.now()}.png`}

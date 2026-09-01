@@ -68,7 +68,10 @@ const App: React.FC = () => {
       case 'edit':
         return <ImageEditor imageToEdit={imageToEdit} onEditingComplete={() => setImageToEdit(null)} />;
       case 'animate':
-        return <VideoGenerator imageToAnimate={imageToAnimate} onAnimationComplete={() => setImageToAnimate(null)} />;
+        return <VideoGenerator imageToAnimate={imageToAnimate} onAnimationComplete={() => {
+          setImageToAnimate(null);
+          setActiveTab('create');
+        }} />;
       case 'help':
         return <HelpPage />;
       case 'characters':

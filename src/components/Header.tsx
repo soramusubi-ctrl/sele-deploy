@@ -12,7 +12,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
     { id: 'create', label: '描く', icon: <PaintBrushIcon /> },
     { id: 'play', label: '遊ぶ', icon: <GameIcon /> },
     { id: 'edit', label: '直す', icon: <WandIcon /> },
-    { id: 'animate', label: '動かす', icon: <FilmIcon />, disabled: true },
+    { id: 'animate', label: '動かす', icon: <FilmIcon /> },
     { id: 'characters', label: '設定', icon: <UserIcon /> },
     { id: 'help', label: 'ヘルプ', icon: <HelpIcon /> },
   ];

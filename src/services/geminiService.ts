@@ -211,10 +211,13 @@ export const editImage = async (prompt: string, imageBase64: string, mimeType: s
 };
 
 export const generateVideo = async (prompt: string, imageBase64: string, mimeType: string, aspectRatio: '16:9' | '9:16', onProgress: (message: string) => void): Promise<string> => {
+    if (!process.env.API_KEY) {
+        throw new Error("Gemini APIキーが設定されていません。");
+    }
     const ai = getAiClient();
     try {
         let operation = await ai.models.generateVideos({
-            model: 'veo-3.1-fast-generate-preview',
+            model: 'veo-3.1-lite-generate-preview',
             prompt,
             image: { imageBytes: imageBase64, mimeType },
             config: { numberOfVideos: 1, resolution: '720p', aspectRatio }
@@ -225,7 +228,10 @@ export const generateVideo = async (prompt: string, imageBase64: string, mimeTyp
             operation = await ai.operations.getVideosOperation({ operation: operation });
         }
         const uri = operation.response?.generatedVideos?.[0]?.video?.uri;
-        const res = await fetch(`${uri}&key=${process.env.API_KEY}`);
+        if (!uri) throw new Error("生成された動画のURLを取得できませんでした。");
+        const separator = uri.includes('?') ? '&' : '?';
+        const res = await fetch(`${uri}${separator}key=${process.env.API_KEY}`);
+        if (!res.ok) throw new Error(`動画の取得に失敗しました (${res.status})`);
         const blob = await res.blob();
         return URL.createObjectURL(blob);
     } catch (error) {
