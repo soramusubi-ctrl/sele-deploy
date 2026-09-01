@@ -531,20 +531,20 @@ Modern glossy anime illustration, clean lineart, cel shading with subtle gradien
                 ) : generatedImage ? (
                   <div className="relative w-full h-full group">
                     <img src={generatedImage} alt="Generated art" className="w-full h-full object-contain" />
-                    <div className="absolute bottom-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-4 right-4 flex flex-wrap justify-end gap-2">
                       <Button onClick={() => onStartEditing({ url: generatedImage || '', base64: '', mimeType: 'image/png' }, prompt, style, aspect)}>直す</Button>
                       <Button onClick={() => onStartAnimating({
                         url: generatedImage,
                         base64: generatedImage.replace(/^data:image\/[^;]+;base64,/, ''),
                         mimeType: generatedImage.match(/^data:(image\/[^;]+);base64,/)?.[1] || 'image/png'
                       })}>動かす</Button>
-                        <a
-  href={generatedImage}
-  download={`quiet-atelier-${Date.now()}.png`}
-  className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold hover:shadow-md transition"
->
-  保存
-</a>
+                      <a
+                        href={generatedImage}
+                        download={`quiet-atelier-${Date.now()}.png`}
+                        className="inline-flex items-center justify-center rounded-full border-2 border-rose-100 bg-white px-6 py-3 text-base font-bold text-rose-500 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-rose-50 focus:outline-none focus:ring-4 focus:ring-rose-100 focus:ring-offset-2"
+                      >
+                        画像をダウンロード
+                      </a>
 
                     </div>
                     {guideInfo && (

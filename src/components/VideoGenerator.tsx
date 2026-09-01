@@ -160,11 +160,18 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
       {videoUrl && (
         <Card>
           <h3 className="text-xl font-bold mb-4 text-stone-700">生成結果</h3>
-          <video 
-            src={videoUrl} 
-            controls 
-            className="w-full rounded-lg shadow-md"
+          <video
+            src={videoUrl}
+            controls
+            className="w-full rounded-lg shadow-md mb-4"
           />
+          <a
+            href={videoUrl}
+            download={`quiet-atelier-video-${Date.now()}.mp4`}
+            className="inline-flex w-full items-center justify-center rounded-full border-2 border-rose-100 bg-white px-6 py-3 text-base font-bold text-rose-500 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-rose-50 focus:outline-none focus:ring-4 focus:ring-rose-100 focus:ring-offset-2"
+          >
+            動画をダウンロード
+          </a>
         </Card>
       )}
     </div>
