@@ -1,0 +1,36 @@
+name: Security checks
+on:
+  pull_request:
+  push:
+    branches: [master]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run lint:security
+      - run: npm test
+        env:
+          TEST_REDIS_PORT: '6379'
+      - run: npm run build
+        env:
+          API_KEY: BUILD_ONLY_LEGACY_SECRET_SENTINEL
+          GEMINI_API_KEY: BUILD_ONLY_PROVIDER_SECRET_SENTINEL
+          APP_ACCESS_CODE: BUILD_ONLY_ACCESS_SECRET_SENTINEL
+      - run: node tests/check-client-bundle.mjs
