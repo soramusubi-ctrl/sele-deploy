@@ -163,7 +163,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
           </div>
 
           <p className="text-xs text-stone-400">
-            Veo 3.1 Lite（720p・8秒）を使用します。動画生成には管理者の有料API設定と利用コードが必要です。
+            Veo 3.1 Lite（720p・8秒）を使用します。動画生成には管理者の有料API設定が必要です。
           </p>
 
           {progressMessage && (

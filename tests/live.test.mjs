@@ -5,10 +5,10 @@ import { WebSocket } from 'ws';
 import { attachLiveRelay, liveStart, liveSetup, LIVE_LIMITS, LIVE_MODEL } from '../server/live.mjs';
 import { createLiveServer } from '../api/live.mjs';
 
-const ACCESS = 'a'.repeat(32);
-const config = { origin: 'https://app.example', accessCode: ACCESS, apiKey: 'server-only-provider-secret',
+const COOKIE = `__Host-sele-session=${'a'.repeat(43)}`;
+const config = { origin: 'https://app.example', apiKey: 'server-only-provider-secret',
   redisUrl: 'https://test.upstash.io', redisToken: 'server-only-redis-secret', daily: 200, lifetime: 2000 };
-const start = { type: 'start', accessCode: ACCESS, characterName: 'セレ', otherCharacters: ['友人'], silent: false };
+const start = { type: 'start', characterName: 'セレ', otherCharacters: ['友人'], silent: false };
 const tick = () => new Promise(resolve => setImmediate(resolve));
 class Socket extends EventEmitter {
   readyState = 1; bufferedAmount = 0; sent = []; terminated = 0;
@@ -17,10 +17,10 @@ class Socket extends EventEmitter {
   terminate() { this.terminated++; this.close(); }
   receive(value, binary = false) { this.emit('message', binary ? value : Buffer.from(JSON.stringify(value)), binary); }
 }
-function harness({ reserveResult = 1, openError = false } = {}) {
+function harness({ reserveResult = 1, openError = false, cookie = COOKIE } = {}) {
   const client = new Socket(), provider = new Socket(), commands = [], timers = [];
   let calls = 0, clock = 0;
-  const relay = attachLiveRelay(client, { headers: { origin: config.origin } }, config, {
+  const relay = attachLiveRelay(client, { headers: { origin: config.origin, cookie } }, config, {
     fetchImpl: async (url, init) => {
       assert.equal(url, config.redisUrl);
       const command = JSON.parse(init.body); commands.push(command);
@@ -70,7 +70,7 @@ test('auth and durable reservation precede the sole provider connection; keys ne
 });
 
 test('unauthenticated and quota-denied starts never connect upstream', async () => {
-  const bad = harness(); bad.client.receive({ ...start, accessCode: 'wrong' }); await tick();
+  const bad = harness({ cookie: '' }); bad.client.receive(start); await tick();
   assert.equal(bad.calls, 0); assert.equal(bad.commands.length, 0); assert.equal(bad.client.sent[0].reason, 'auth');
   const quota = harness({ reserveResult: 0 }); quota.client.receive(start); await tick();
   assert.equal(quota.calls, 0); assert.equal(quota.client.sent[0].reason, 'quota');
@@ -179,15 +179,20 @@ test('upstream errors are sanitized and are never retried', async () => {
 
 test('real local WebSocket handshake: exact path/origin only, no query-string credentials', async t => {
   let admitted = 0;
-  const server = createLiveServer({ env: { AI_ENABLED: 'true', APP_ORIGIN: config.origin, APP_ACCESS_CODE: ACCESS,
+  const server = createLiveServer({ env: { AI_ENABLED: 'true', APP_ORIGIN: config.origin,
     GEMINI_API_KEY: 'fake-key', UPSTASH_REDIS_REST_URL: config.redisUrl, UPSTASH_REDIS_REST_TOKEN: 'fake-redis',
     AI_DAILY_UNITS: '200', AI_LIFETIME_UNITS: '2000' }, relay: socket => { admitted++; socket.close(); } });
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
   t.after(() => new Promise(resolve => server.close(resolve)));
   const base = `ws://127.0.0.1:${server.address().port}`;
-  const good = new WebSocket(`${base}/api/live`, { origin: config.origin }); await once(good, 'close'); assert.equal(admitted, 1);
+  const good = new WebSocket(`${base}/api/live`, { origin: config.origin, headers: { cookie: COOKIE } }); await once(good, 'close'); assert.equal(admitted, 1);
   for (const [path, origin] of [['/api/live?key=secret', config.origin], ['/api/other', config.origin], ['/api/live', 'https://attacker.example']]) {
-    const ws = new WebSocket(base + path, { origin });
+    const ws = new WebSocket(base + path, { origin, headers: { cookie: COOKIE } });
+    const error = await new Promise(resolve => ws.once('error', resolve));
+    assert.match(error.message, /403/);
+  }
+  for (const cookie of ['', '__Host-sele-session=bad', COOKIE + '; ' + COOKIE]) {
+    const ws = new WebSocket(base + '/api/live', { origin: config.origin, headers: { cookie } });
     const error = await new Promise(resolve => ws.once('error', resolve));
     assert.match(error.message, /403/);
   }

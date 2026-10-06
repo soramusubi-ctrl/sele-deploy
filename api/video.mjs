@@ -2,7 +2,7 @@ import { once } from 'node:events';
 import { configuration, authorize, readBody, HttpError } from '../server/security.mjs';
 import { videoInput, createVideo, pollVideo, downloadVideo, MAX_VIDEO_BYTES } from '../server/video.mjs';
 
-// All methods require the application access code. No provider URLs or keys leave
+// All methods require the anonymous ownership cookie and exact Origin. No provider URLs or keys leave
 // this server. MP4 is streamed through this endpoint and becomes a browser blob.
 export const maxDuration = 120;
 export function createVideoHandler({ env = process.env, fetchImpl = fetch } = {}) {
@@ -16,7 +16,7 @@ export function createVideoHandler({ env = process.env, fetchImpl = fetch } = {}
     if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return send(405, { error: 'POSTで送信してください。' }); }
     try {
       const config = configuration(env);
-      authorize(req, config);
+      config.owner = authorize(req, config);
       const input = videoInput(await readBody(req));
       if (input.action === 'create') return send(200, await createVideo(input, config, fetchImpl));
       if (input.action === 'status') return send(200, await pollVideo(input.jobId, config, fetchImpl));

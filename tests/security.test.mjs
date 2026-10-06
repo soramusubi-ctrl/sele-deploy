@@ -6,10 +6,10 @@ import { configuration, authorize, readBody, reserve, RESERVE_SCRIPT, MAX_BODY_B
 import { operation, resultFor } from '../server/operations.mjs';
 
 const env = { AI_ENABLED: 'true', APP_ORIGIN: 'https://example.test', GEMINI_API_KEY: 'test-provider-marker',
-  APP_ACCESS_CODE: 'a'.repeat(43), UPSTASH_REDIS_REST_URL: 'https://test.upstash.io',
+  UPSTASH_REDIS_REST_URL: 'https://test.upstash.io',
   UPSTASH_REDIS_REST_TOKEN: 'test-redis-marker', AI_DAILY_UNITS: '200', AI_LIFETIME_UNITS: '1000' };
 const req = (body = { operation: 'summarize', conversation: 'hello' }, extra = {}) => ({ method: 'POST',
-  headers: { origin: env.APP_ORIGIN, authorization: `Bearer ${env.APP_ACCESS_CODE}`, 'content-type': 'application/json' }, body, ...extra });
+  headers: { origin: env.APP_ORIGIN, cookie: `__Host-sele-session=${'a'.repeat(43)}`, 'content-type': 'application/json' }, body, ...extra });
 function response() {
   const res = new EventEmitter();
   Object.assign(res, { headers: {}, chunks: [], statusCode: 0, headersSent: false,
@@ -34,16 +34,21 @@ function fetchMock({ reserveResult = 1, providerResult = provider(), failRedis =
 
 test('configuration fails closed, ignores legacy provider key, validates origin and budgets', () => {
   assert.throws(() => configuration({ ...env, GEMINI_API_KEY: '', API_KEY: 'legacy' }));
-  for (const [key, value] of [['AI_ENABLED','false'], ['APP_ACCESS_CODE','short'], ['AI_DAILY_UNITS','201'], ['AI_LIFETIME_UNITS','Infinity'],
+  for (const [key, value] of [['AI_ENABLED','false'], ['AI_DAILY_UNITS','201'], ['AI_LIFETIME_UNITS','Infinity'],
     ['APP_ORIGIN','https://example.test/path'], ['APP_ORIGIN','http://evil.test'], ['UPSTASH_REDIS_REST_URL','https://evil.test']]) {
     assert.throws(() => configuration({ ...env, [key]: value }), key);
   }
   assert.equal(configuration(env).daily, 200);
 });
-test('auth requires both code and exact origin', () => {
-  const config = configuration(env); authorize(req(), config);
-  for (const headers of [{ origin: env.APP_ORIGIN }, { origin: 'https://evil.test', authorization: `Bearer ${env.APP_ACCESS_CODE}` },
-    { origin: env.APP_ORIGIN, authorization: ['Bearer', env.APP_ACCESS_CODE] }, { origin: env.APP_ORIGIN, authorization: 'Bearer wrong' }]) {
+test('anonymous ownership requires exact Origin and an unambiguous cookie, not a code', () => {
+  const config = configuration(env); assert.match(authorize(req(), config), /^[a-f0-9]{64}$/);
+  const valid = `__Host-sele-session=${'a'.repeat(43)}`;
+  for (const headers of [{ origin: env.APP_ORIGIN }, { origin: 'https://evil.test', cookie: valid },
+    { cookie: valid }, { origin: 'null', cookie: valid },
+    { origin: env.APP_ORIGIN, cookie: valid, 'sec-fetch-site': 'cross-site' },
+    { origin: env.APP_ORIGIN, cookie: valid + '; ' + valid },
+    { origin: env.APP_ORIGIN, cookie: '__Host-sele-session=wrong' },
+    { origin: env.APP_ORIGIN, cookie: [valid] }]) {
     assert.throws(() => authorize({ headers }, config));
   }
 });
