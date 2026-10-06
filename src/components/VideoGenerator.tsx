@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { ImageForEditing } from '../App';
 import Button from './Button';
 import Card from './Card';
@@ -18,6 +18,11 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
   const [progressMessage, setProgressMessage] = useState('');
   const [sourceImage, setSourceImage] = useState<ImageForEditing | null>(imageToAnimate);
 
+  const generation = useRef<AbortController | null>(null);
+
+  useEffect(() => () => generation.current?.abort(), []);
+  useEffect(() => () => { if (videoUrl) URL.revokeObjectURL(videoUrl); }, [videoUrl]);
+
   useEffect(() => {
     setSourceImage(imageToAnimate);
   }, [imageToAnimate]);
@@ -25,8 +30,13 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
       alert('画像ファイルを選択してください。');
+      return;
+    }
+
+    if (file.size > 1_048_576) {
+      alert('動画の元画像は1MiB以下にしてください。画像を小さく保存してから選び直してください。');
       return;
     }
 
@@ -44,7 +54,9 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
   };
 
   const handleGenerate = async () => {
-    if (!sourceImage || !prompt.trim()) return;
+    if (!sourceImage || !prompt.trim() || generation.current) return;
+    const controller = new AbortController();
+    generation.current = controller;
     
     setIsGenerating(true);
     setVideoUrl(null);
@@ -56,15 +68,19 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
         sourceImage.base64,
         sourceImage.mimeType,
         aspectRatio,
-        setProgressMessage
+        setProgressMessage,
+        controller.signal
       );
+      if (controller.signal.aborted) { URL.revokeObjectURL(url); return; }
       setVideoUrl(url);
       setProgressMessage('');
-    } catch (error: any) {
-      alert(error.message || 'アニメーション生成に失敗しました');
+    } catch (error: unknown) {
+      if (controller.signal.aborted) return;
+      alert(error instanceof Error ? error.message : 'アニメーション生成に失敗しました');
       setProgressMessage('');
     } finally {
-      setIsGenerating(false);
+      generation.current = null;
+      if (!controller.signal.aborted) setIsGenerating(false);
     }
   };
 
@@ -85,9 +101,9 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
           <div className="mb-4 rounded-lg border-2 border-dashed border-stone-200 p-6 text-center">
             <label className="cursor-pointer font-bold text-rose-500 hover:text-rose-600">
               動かす画像を選ぶ
-              <input type="file" accept="image/*" onChange={handleImageUpload} className="sr-only" />
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageUpload} className="sr-only" />
             </label>
-            <p className="mt-2 text-xs text-stone-400">PNG、JPEG、WebPなどの画像に対応</p>
+            <p className="mt-2 text-xs text-stone-400">PNG、JPEG、WebP（1MiB以下）に対応</p>
           </div>
         )}
 
@@ -102,6 +118,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
               placeholder="例: ゆっくりと風に揺れる"
               className="w-full p-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-rose-300 focus:border-transparent"
               rows={3}
+              maxLength={3000}
               disabled={isGenerating}
             />
           </div>
@@ -146,7 +163,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
           </div>
 
           <p className="text-xs text-stone-400">
-            Veo 3.1 Lite（720p）を使用します。動画生成には有料のGemini API設定が必要です。
+            Veo 3.1 Lite（720p・8秒）を使用します。動画生成には管理者の有料API設定と利用コードが必要です。
           </p>
 
           {progressMessage && (
@@ -179,3 +196,4 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ imageToAnimate, onAnima
 };
 
 export default VideoGenerator;
+

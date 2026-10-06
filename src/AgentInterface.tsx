@@ -1,7 +1,6 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, LiveServerMessage, Modality, Type } from '@google/genai';
-import type { FunctionDeclaration } from '@google/genai';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { getAccessCode } from './services/aiAccess';
 import { generateImage } from './services/geminiService';
 import Card from './components/Card';
 import Button from './components/Button';
@@ -48,342 +47,226 @@ const VolumeOffIcon = () => (
 const AgentInterface: React.FC<AgentInterfaceProps> = ({ characters }) => {
     const [selectedCharId, setSelectedCharId] = useState<string | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-    const [statusMessage, setStatusMessage] = useState<string>("");
+    const [statusMessage, setStatusMessage] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
-    const [isSilentMode, setIsSilentMode] = useState<boolean>(true); // Default to Silent for "No conversation needed"
-    
-    // Refs for Audio Contexts and Stream
+    const [isSilentMode, setIsSilentMode] = useState(true);
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
     const audioSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
-    const nextStartTimeRef = useRef<number>(0);
+    const nextStartTimeRef = useRef(0);
     const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
-    const sessionPromiseRef = useRef<Promise<any> | null>(null);
+    const socketRef = useRef<WebSocket | null>(null);
+    const connectionVersion = useRef(0);
+    const connectingRef = useRef(false);
+    const mountedRef = useRef(true);
+    const drawingVersion = useRef(0);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Clean up on unmount
-    useEffect(() => {
-        return () => {
-            handleDisconnect();
-        };
-    }, []);
-
-    const selectedCharacter = characters.find(c => c.id === selectedCharId);
-
-    const handleConnect = async () => {
-        if (!selectedCharacter) return;
-
-        try {
-            setStatusMessage(isSilentMode ? "聞き耳を立てています..." : "呼び出し中...");
-            
-            // Audio Context Setup
-            inputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-            outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-            
-            // Microphone Access
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true
-            } });
-            mediaStreamRef.current = stream;
-
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-            // Tool Definition
-            const drawImageTool: FunctionDeclaration = {
-                name: 'draw_image',
-                description: '現在の会話の情景や、聞こえてくる話を絵にして生成するツール。視覚的な説明を聞いたらすぐに実行すること。',
-                parameters: {
-                    type: Type.OBJECT,
-                    properties: {
-                        prompt: {
-                            type: Type.STRING,
-                            description: '描画する絵の詳細な説明。',
-                        },
-                        style: {
-                             type: Type.STRING,
-                             description: '画風（例: アニメ, 水彩画, 写真）。指定がなければ「アニメ」としてください。',
-                        }
-                    },
-                    required: ['prompt'],
-                },
-            };
-
-            const otherCharacters = characters.filter(c => c.isActive && c.id !== selectedCharacter.id).map(c => c.name).join('や');
-            
-            // Instruction based on Mode
-            let systemInstruction = "";
-            
-            if (isSilentMode) {
-                // "No conversation needed" Mode
-                systemInstruction = `あなたは「${selectedCharacter.name}」という名前のAIイラストレーターです。
-現在、他のAIエージェントやユーザーの会話、あるいは物語を聞いています。
-あなたの役割は「聞き役」に徹し、聞こえてきた情景や物語のワンシーンを、リアルタイムで絵にすることです。
-
-【重要：沈黙のルール】
-- **絶対に喋らないでください。** 音声応答は不要です。
-- あなたの出力は \`draw_image\` ツールの呼び出しのみであるべきです。
-
-【行動指針】
-- 入力音声を注意深く聞いてください。
-- 「〜な場所で」「〜が見える」といった視覚的な描写や、印象的なシーンの話が出たら、即座に \`draw_image\` ツールを使用してください。
-- 躊躇せず、どんどん描いてください。`;
-
-            } else {
-                // Interactive Mode
-                systemInstruction = `あなたは「${selectedCharacter.name}」という名前のAIキャラクターです。
-ユーザーと音声通話をしています。自然な口調で話してください。
-会話の中で「絵を描いて」と頼まれたり、素敵な情景の話になったら、\`draw_image\` ツールを使ってその場を描き出してください。
-自分のことは「私」や「僕」と呼び、${otherCharacters ? `仲間の${otherCharacters}のことも` : ''}必要に応じて話題にしてください。`;
-            }
-
-            // Connect to Live API
-            const sessionPromise = ai.live.connect({
-                model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-                callbacks: {
-                    onopen: () => {
-                        console.log("Live Session Connected");
-                        setIsConnected(true);
-                        setStatusMessage(isSilentMode ? "聞き取り中..." : "通話中");
-                        
-                        // Setup Input Stream Processing
-                        if (!inputAudioContextRef.current || !mediaStreamRef.current) return;
-                        
-                        const inputCtx = inputAudioContextRef.current;
-                        const source = inputCtx.createMediaStreamSource(mediaStreamRef.current);
-                        const processor = inputCtx.createScriptProcessor(4096, 1, 1);
-                        
-                        processor.onaudioprocess = (e) => {
-                            const inputData = e.inputBuffer.getChannelData(0);
-                            const pcmBlob = createBlob(inputData);
-                            
-                            sessionPromise.then(session => {
-                                session.sendRealtimeInput({ media: pcmBlob });
-                            });
-                        };
-                        
-                        source.connect(processor);
-                        processor.connect(inputCtx.destination);
-                        
-                        audioSourceRef.current = source;
-                        scriptProcessorRef.current = processor;
-                    },
-                    onmessage: async (message: LiveServerMessage) => {
-                        // Handle Audio Output - Only play if NOT in silent mode
-                        const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-                        if (audioData && !isSilentMode) {
-                            playAudio(audioData);
-                        }
-                        
-                        // Handle Function Calls
-                        if (message.toolCall && message.toolCall.functionCalls) {
-                            for (const fc of message.toolCall.functionCalls) {
-                                if (fc.name === 'draw_image') {
-                                    setIsGenerating(true);
-                                    setStatusMessage(`🎨 ${selectedCharacter.name}が筆を執りました...`);
-                                    
-                                    try {
-                                        const prompt = (fc.args?.prompt as string) || '';
-                                        const style = (fc.args?.style as string) || 'anime';
-                                        
-                                        // Pass active characters for visual consistency
-                                        const activeChars = characters
-                                            .filter(c => c.isActive)
-                                            .map(c => ({ name: c.name, images: c.images }));
-                                            
-                                        const finalPrompt = `${prompt}\nStyle: ${style}`;
-                                        
-                                        const base64Image = await generateImage(
-                                            finalPrompt,
-                                            activeChars
-                                        );
-                                        
-                                        setGeneratedImage(`data:image/png;base64,${base64Image}`);
-                                        setStatusMessage(`${selectedCharacter.name}が描き上げました`);
-                                        
-                                        // Send response back to model
-                                        sessionPromise.then(session => {
-                                            session.sendToolResponse({
-                                                functionResponses: {
-                                                    id: fc.id,
-                                                    name: fc.name,
-                                                    response: { result: "Image generated successfully and displayed." }
-                                                }
-                                            });
-                                        });
-                                        
-                                    } catch (err) {
-                                        console.error(err);
-                                        setStatusMessage("描画に失敗しました");
-                                        
-                                        sessionPromise.then(session => {
-                                            session.sendToolResponse({
-                                                functionResponses: {
-                                                    id: fc.id,
-                                                    name: fc.name,
-                                                    response: { error: "Failed to generate image." }
-                                                }
-                                            });
-                                        });
-                                    } finally {
-                                        setIsGenerating(false);
-                                    }
-                                }
-                            }
-                        }
-
-                        // Handle Interruption
-                        if (message.serverContent?.interrupted) {
-                            stopAllAudio();
-                        }
-                    },
-                    onclose: () => {
-                        console.log("Live Session Closed");
-                        handleDisconnect();
-                    },
-                    onerror: (err) => {
-                        console.error("Live Session Error", err);
-                        setStatusMessage("エラーが発生しました。");
-                        handleDisconnect();
-                    }
-                },
-                config: {
-                    responseModalities: [Modality.AUDIO],
-                    tools: [{ functionDeclarations: [drawImageTool] }],
-                    systemInstruction: systemInstruction,
-                    speechConfig: {
-                        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } }
-                    }
-                }
-            });
-            
-            sessionPromiseRef.current = sessionPromise;
-
-        } catch (error) {
-            console.error("Connection failed", error);
-            setStatusMessage("接続に失敗しました。");
-            handleDisconnect();
-        }
-    };
-
-    const handleDisconnect = () => {
-        setIsConnected(false);
-        setIsSpeaking(false);
-        setStatusMessage("");
-        
-        // Stop Microphone
-        if (mediaStreamRef.current) {
-            mediaStreamRef.current.getTracks().forEach(track => track.stop());
-            mediaStreamRef.current = null;
-        }
-        
-        // Stop Audio Processing
-        if (scriptProcessorRef.current) {
-            scriptProcessorRef.current.disconnect();
-            scriptProcessorRef.current = null;
-        }
-        if (audioSourceRef.current) {
-            audioSourceRef.current.disconnect();
-            audioSourceRef.current = null;
-        }
-        
-        // Close Contexts
-        if (inputAudioContextRef.current) {
-            inputAudioContextRef.current.close();
-            inputAudioContextRef.current = null;
-        }
-        if (outputAudioContextRef.current) {
-            outputAudioContextRef.current.close();
-            outputAudioContextRef.current = null;
-        }
-        
-        nextStartTimeRef.current = 0;
-    };
-
-    const playAudio = async (base64Data: string) => {
-        if (!outputAudioContextRef.current) return;
-        const ctx = outputAudioContextRef.current;
-        
-        try {
-            const audioBuffer = await decodeAudioData(decode(base64Data), ctx, 24000, 1);
-            const source = ctx.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(ctx.destination);
-            
-            source.onended = () => {
-                sourcesRef.current.delete(source);
-                if (sourcesRef.current.size === 0) {
-                    setIsSpeaking(false);
-                }
-            };
-            
-            const currentTime = ctx.currentTime;
-            if (nextStartTimeRef.current < currentTime) {
-                nextStartTimeRef.current = currentTime;
-            }
-            
-            source.start(nextStartTimeRef.current);
-            nextStartTimeRef.current += audioBuffer.duration;
-            sourcesRef.current.add(source);
-            setIsSpeaking(true);
-            
-        } catch (e) {
-            console.error("Audio playback error", e);
-        }
-    };
-
-    const stopAllAudio = () => {
-        sourcesRef.current.forEach(source => {
-            try { source.stop(); } catch(e) {}
-        });
+    const stopAllAudio = useCallback(() => {
+        sourcesRef.current.forEach(source => { try { source.stop(); } catch { /* Already ended. */ } });
         sourcesRef.current.clear();
         nextStartTimeRef.current = 0;
         setIsSpeaking(false);
+    }, []);
+
+    const handleDisconnect = useCallback((message = '') => {
+        connectionVersion.current += 1;
+        connectingRef.current = false;
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = null;
+        const socket = socketRef.current;
+        socketRef.current = null;
+        if (socket && socket.readyState < WebSocket.CLOSING) {
+            if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'stop' }));
+            socket.close();
+        }
+        mediaStreamRef.current?.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current = null;
+        if (scriptProcessorRef.current) {
+            scriptProcessorRef.current.onaudioprocess = null;
+            scriptProcessorRef.current.disconnect();
+            scriptProcessorRef.current = null;
+        }
+        audioSourceRef.current?.disconnect();
+        audioSourceRef.current = null;
+        stopAllAudio();
+        for (const ctx of [inputAudioContextRef.current, outputAudioContextRef.current]) {
+            if (ctx && ctx.state !== 'closed') void ctx.close().catch(() => undefined);
+        }
+        inputAudioContextRef.current = null;
+        outputAudioContextRef.current = null;
+        setIsConnected(false);
+        setIsConnecting(false);
+        setStatusMessage(message);
+    }, [stopAllAudio]);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            drawingVersion.current += 1;
+            handleDisconnect();
+        };
+    }, [handleDisconnect]);
+
+    const selectedCharacter = characters.find(c => c.id === selectedCharId);
+    const handleConnect = async () => {
+        if (!selectedCharacter || connectingRef.current || socketRef.current) return;
+        const accessCode = getAccessCode();
+        if (!accessCode) { setStatusMessage('先に利用コードを入力してください。'); return; }
+        connectingRef.current = true;
+        setIsConnecting(true);
+        const version = ++connectionVersion.current;
+        const current = () => mountedRef.current && connectionVersion.current === version;
+        const silent = isSilentMode;
+        const cancelledDraws = new Set<string>();
+        let drawQueue = Promise.resolve();
+        setStatusMessage('マイクと安全な音声接続を準備しています...');
+        try {
+            inputAudioContextRef.current = new AudioContext({ sampleRate: 16000 });
+            outputAudioContextRef.current = new AudioContext({ sampleRate: 24000 });
+            // Start/resume in this user gesture for Safari's audio policy.
+            void inputAudioContextRef.current.resume();
+            void outputAudioContextRef.current.resume();
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: {
+                echoCancellation: true, noiseSuppression: true, autoGainControl: true,
+            } });
+            if (!current()) { stream.getTracks().forEach(track => track.stop()); return; }
+            mediaStreamRef.current = stream;
+            const url = new URL('/api/live', window.location.origin);
+            url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+            // Only our own server is contacted; no provider SDK/key/token is in the browser.
+            const socket = new WebSocket(url);
+            socketRef.current = socket;
+            timerRef.current = setTimeout(() => {
+                if (current()) handleDisconnect('接続がタイムアウトしました。もう一度お試しください。');
+            }, 15_000);
+            socket.onopen = () => {
+                if (!current()) { socket.close(); return; }
+                socket.send(JSON.stringify({ type: 'start', accessCode,
+                    characterName: selectedCharacter.name,
+                    otherCharacters: characters.filter(c => c.isActive && c.id !== selectedCharacter.id).map(c => c.name).slice(0, 5),
+                    silent,
+                }));
+            };
+            socket.onmessage = event => {
+                if (!current()) return;
+                let message: { type: string; durationMs?: number; data?: string; reason?: string; id?: string; prompt?: string; style?: string };
+                try { message = JSON.parse(event.data as string); } catch { handleDisconnect('音声データを受信できませんでした。'); return; }
+                if (message.type === 'ready') {
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    // UX fallback only. The server independently owns the paid-session timer.
+                    timerRef.current = setTimeout(() => {
+                        if (current()) handleDisconnect('45秒の接続が終了しました。続けるにはもう一度開始してください。');
+                    }, Math.min(message.durationMs || 45_000, 45_000) + 1000);
+                    connectingRef.current = false;
+                    setIsConnecting(false);
+                    setIsConnected(true);
+                    setStatusMessage(silent ? '聞き取り中（最大45秒）...' : '通話中（最大45秒）');
+                    const input = inputAudioContextRef.current;
+                    if (!input || !mediaStreamRef.current) return;
+                    const source = input.createMediaStreamSource(mediaStreamRef.current);
+                    const processor = input.createScriptProcessor(4096, 1, 1);
+                    processor.onaudioprocess = e => {
+                        if (!current() || socket.readyState !== WebSocket.OPEN) return;
+                        if (socket.bufferedAmount > 128_000) { handleDisconnect('回線が混み合っています。再接続してください。'); return; }
+                        socket.send(createPcm(e.inputBuffer.getChannelData(0), input.sampleRate));
+                    };
+                    source.connect(processor);
+                    processor.connect(input.destination);
+                    audioSourceRef.current = source;
+                    scriptProcessorRef.current = processor;
+                } else if (message.type === 'audio' && message.data && !silent) {
+                    playAudio(message.data);
+                } else if (message.type === 'interrupted') {
+                    stopAllAudio();
+                } else if (message.type === 'cancelDraw' && message.id) {
+                    cancelledDraws.add(message.id);
+                } else if (message.type === 'draw' && message.id && message.prompt) {
+                    const { id, prompt, style } = message;
+                    drawQueue = drawQueue.then(async () => {
+                        if (!current() || cancelledDraws.has(id)) return;
+                        const drawing = ++drawingVersion.current;
+                        setIsGenerating(true);
+                        setStatusMessage(`🎨 ${selectedCharacter.name}が筆を執りました...`);
+                        let ok = false;
+                        try {
+                            const activeChars = characters.filter(c => c.isActive).map(c => ({ name: c.name, images: c.images }));
+                            const result = await generateImage(`${prompt}\nStyle: ${style || 'アニメ'}`, activeChars);
+                            // An image already requested may finish after the audio session ends.
+                            if (mountedRef.current && drawing === drawingVersion.current && !cancelledDraws.has(id)) {
+                                setGeneratedImage(`data:image/png;base64,${result}`);
+                                if (current()) setStatusMessage(`${selectedCharacter.name}が描き上げました`);
+                            }
+                            ok = true;
+                        } catch {
+                            if (current()) setStatusMessage('描画に失敗しました。利用上限や画像サイズを確認してください。');
+                        } finally {
+                            if (mountedRef.current && drawing === drawingVersion.current) setIsGenerating(false);
+                            if (current() && !cancelledDraws.has(id) && socket.readyState === WebSocket.OPEN) {
+                                socket.send(JSON.stringify({ type: 'toolResult', id, ok }));
+                            }
+                        }
+                    });
+                } else if (message.type === 'end') {
+                    const reasons: Record<string, string> = {
+                        duration: '45秒の接続が終了しました。続けるにはもう一度開始してください。',
+                        limit: '今回の音声利用上限に達しました。続けるにはもう一度開始してください。',
+                        quota: '利用上限または同時接続数に達しました。少し待つか管理者に確認してください。',
+                        auth: '利用コードを確認してください。',
+                        slow: '回線が混み合っています。再接続してください。',
+                        error: '音声接続に失敗しました。管理者に設定を確認してください。',
+                        closed: '音声接続が終了しました。',
+                    };
+                    handleDisconnect(reasons[message.reason || 'closed'] || reasons.closed);
+                }
+            };
+            socket.onerror = () => { if (current()) handleDisconnect('音声接続に失敗しました。もう一度お試しください。'); };
+            socket.onclose = () => { if (current()) handleDisconnect('音声接続が終了しました。'); };
+        } catch {
+            if (current()) handleDisconnect('接続できませんでした。マイクの許可と利用コードを確認してください。');
+        }
     };
 
-    // --- Helpers ---
-    
-    function createBlob(data: Float32Array): { data: string; mimeType: string } {
-        const l = data.length;
-        const int16 = new Int16Array(l);
-        for (let i = 0; i < l; i++) {
-            int16[i] = Math.max(-1, Math.min(1, data[i])) * 32767;
-        }
-        const uint8 = new Uint8Array(int16.buffer);
-        let binary = '';
-        for (let i = 0; i < uint8.byteLength; i++) {
-            binary += String.fromCharCode(uint8[i]);
-        }
-        return {
-            data: btoa(binary),
-            mimeType: 'audio/pcm;rate=16000',
-        };
-    }
+    const playAudio = (base64Data: string) => {
+        const ctx = outputAudioContextRef.current;
+        if (!ctx || ctx.state === 'closed') return;
+        try {
+            const binary = atob(base64Data);
+            const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+            if (bytes.byteLength % 2) return;
+            const view = new DataView(bytes.buffer);
+            const buffer = ctx.createBuffer(1, bytes.byteLength / 2, 24000);
+            const channel = buffer.getChannelData(0);
+            for (let i = 0; i < channel.length; i++) channel[i] = view.getInt16(i * 2, true) / 32768;
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+            source.onended = () => { sourcesRef.current.delete(source); if (!sourcesRef.current.size) setIsSpeaking(false); };
+            nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
+            source.start(nextStartTimeRef.current);
+            nextStartTimeRef.current += buffer.duration;
+            sourcesRef.current.add(source);
+            setIsSpeaking(true);
+        } catch { /* Ignore a malformed playback chunk without logging payloads. */ }
+    };
 
-    function decode(base64: string) {
-        const binaryString = atob(base64);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-        return bytes;
-    }
-
-    async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number): Promise<AudioBuffer> {
-        const dataInt16 = new Int16Array(data.buffer);
-        const frameCount = dataInt16.length / numChannels;
-        const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-        for (let channel = 0; channel < numChannels; channel++) {
-            const channelData = buffer.getChannelData(channel);
-            for (let i = 0; i < frameCount; i++) {
-                channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-            }
+    function createPcm(data: Float32Array, sampleRate: number): ArrayBuffer {
+        const ratio = sampleRate / 16000;
+        const length = Math.floor(data.length / ratio);
+        const buffer = new ArrayBuffer(length * 2);
+        const view = new DataView(buffer);
+        for (let i = 0; i < length; i++) {
+            const position = i * ratio;
+            const offset = Math.floor(position);
+            const fraction = position - offset;
+            const value = data[offset] * (1 - fraction) + data[Math.min(offset + 1, data.length - 1)] * fraction;
+            view.setInt16(i * 2, Math.max(-1, Math.min(1, value)) * 32767, true);
         }
         return buffer;
     }
@@ -470,14 +353,14 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({ characters }) => {
                                 {/* Mode Toggle */}
                                 <div className="flex items-center justify-center space-x-4 bg-stone-50 p-2 rounded-xl w-full">
                                     <button 
-                                        onClick={() => setIsSilentMode(true)}
+                                        disabled={isConnecting} onClick={() => setIsSilentMode(true)}
                                         className={`flex-1 py-2 px-3 rounded-lg text-sm font-bold flex items-center justify-center space-x-2 transition-all ${isSilentMode ? 'bg-white shadow-sm text-rose-500' : 'text-stone-400 hover:text-stone-600'}`}
                                     >
                                         <VolumeOffIcon />
                                         <span>聞き取りのみ</span>
                                     </button>
                                     <button 
-                                        onClick={() => setIsSilentMode(false)}
+                                        disabled={isConnecting} onClick={() => setIsSilentMode(false)}
                                         className={`flex-1 py-2 px-3 rounded-lg text-sm font-bold flex items-center justify-center space-x-2 transition-all ${!isSilentMode ? 'bg-white shadow-sm text-rose-500' : 'text-stone-400 hover:text-stone-600'}`}
                                     >
                                         <VolumeUpIcon />
@@ -486,21 +369,22 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({ characters }) => {
                                 </div>
 
                                 <div className="flex items-center space-x-4 w-full justify-center">
-                                    <button onClick={() => setSelectedCharId(null)} className="text-stone-400 hover:text-stone-600 font-bold px-4 py-2">
+                                    <button onClick={() => { handleDisconnect(); setSelectedCharId(null); }} className="text-stone-400 hover:text-stone-600 font-bold px-4 py-2">
                                         戻る
                                     </button>
-                                    <Button onClick={handleConnect} className="shadow-xl shadow-rose-100 text-lg px-8 py-4 rounded-full flex-1" icon={isSilentMode ? <EarIcon /> : <PhoneIcon />}>
-                                        {isSilentMode ? "聞き取り開始" : "通話する"}
+                                    <Button disabled={isConnecting} onClick={handleConnect} className="shadow-xl shadow-rose-100 text-lg px-8 py-4 rounded-full flex-1" icon={isSilentMode ? <EarIcon /> : <PhoneIcon />}>
+                                        {isConnecting ? "接続中..." : isSilentMode ? "聞き取り開始" : "通話する"}
                                     </Button>
                                 </div>
                             </>
                         ) : (
-                            <Button onClick={handleDisconnect} variant="secondary" className="px-8 py-3 rounded-full bg-red-50 text-red-500 border-red-100 hover:bg-red-100 w-full">
+                            <Button onClick={() => handleDisconnect()} variant="secondary" className="px-8 py-3 rounded-full bg-red-50 text-red-500 border-red-100 hover:bg-red-100 w-full">
                                 切断する
                             </Button>
                         )}
                     </div>
 
+                    <p className="text-xs text-stone-400 mt-5 z-10">1回最大45秒。継続には再接続が必要です。</p>
                     {/* Background decorations */}
                     <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                         <div className="absolute top-10 left-10 w-20 h-20 bg-rose-200 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
@@ -545,3 +429,4 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({ characters }) => {
 };
 
 export default AgentInterface;
+
