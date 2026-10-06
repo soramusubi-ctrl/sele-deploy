@@ -15,8 +15,8 @@ function keys(value, allowed) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(k => !allowed.includes(k))) invalid();
 }
 export function liveStart(value) {
-  keys(value, ['type', 'accessCode', 'characterName', 'otherCharacters', 'silent']);
-  if (value.type !== 'start' || typeof value.accessCode !== 'string' || value.accessCode.length > 128 ||
+  keys(value, ['type', 'characterName', 'otherCharacters', 'silent']);
+  if (value.type !== 'start' ||
       typeof value.characterName !== 'string' || !value.characterName.trim() || value.characterName.length > 80 ||
       typeof value.silent !== 'boolean' || !Array.isArray(value.otherCharacters) || value.otherCharacters.length > 5 ||
       value.otherCharacters.some(name => typeof name !== 'string' || name.length > 80)) invalid();
@@ -107,7 +107,7 @@ export function attachLiveRelay(client, req, config, {
     if (message?.type === 'stop') { keys(message, ['type']); finish('closed'); return; }
     if (state === 'auth') {
       setup = liveStart(message);
-      authorize({ headers: { ...req.headers, authorization: `Bearer ${message.accessCode}` } }, config);
+      authorize(req, config);
       // Switch synchronously before reserve: simultaneous starts cannot mint more calls.
       state = 'starting'; cancel(authTimer);
       lease = await reserve(config, LIVE_LIMITS.reservation, fetchImpl);

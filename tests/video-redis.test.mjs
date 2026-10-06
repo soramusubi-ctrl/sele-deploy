@@ -45,9 +45,9 @@ test('real Redis video scripts: one durable charge, ownership, poll leases, down
   const keys = new Set([ledger, leases, active]), owner = 'test-owner';
   const jobKey = id => `${prefix}:job:${id}`;
   const evaluate = (script, keys, args) => command(['EVAL', script, keys.length, ...keys, ...args]);
-  const create = (requestId, { fingerprint = 'fingerprint', daily = 200, lifetime = 2000 } = {}) => {
+  const create = (requestId, { fingerprint = 'fingerprint', daily = 200, lifetime = 2000, session = owner } = {}) => {
     const id = randomUUID(), job = jobKey(id); keys.add(job);
-    return evaluate(VIDEO_CREATE_SCRIPT, [ledger, leases, active, job], [lifetime, daily, 160, owner, fingerprint, id, `video:${owner}:${requestId}`]);
+    return evaluate(VIDEO_CREATE_SCRIPT, [ledger, leases, active, job], [lifetime, daily, 160, session, `${session}:${fingerprint}`, id, `video:${requestId}`]);
   };
   const seed = (total = 0, day = 0, daily = 0) => command(['HSET', ledger, 'total', total, 'day', day, 'daily', daily]);
   const op = `models/${VIDEO_MODEL}/operations/test-op`;
@@ -64,6 +64,8 @@ test('real Redis video scripts: one durable charge, ownership, poll leases, down
     assert.ok(await command(['TTL', job]) > 0, 'sensitive provider job metadata expires');
     assert.deepEqual(await create('same-request', { fingerprint: 'changed' }), [-2]);
     assert.deepEqual(await create('daily-limit'), [0]);
+    assert.deepEqual(await create('same-request', { session: 'other-browser' }), [-2], 'cookie replacement cannot reopen uncertain create');
+    assert.deepEqual(await create('new-session', { session: 'other-browser' }), [0], 'new session cannot reset global daily quota');
     assert.deepEqual(await evaluate(VIDEO_POLL_SCRIPT, [job, active, leases], ['another-owner', 'token', id]), [-1]);
     assert.deepEqual(await evaluate(VIDEO_POLL_SCRIPT, [job, active, leases], [owner, 'token', id]), [0, 'uncertain']);
     assert.equal(await evaluate(VIDEO_STARTED_SCRIPT, [job, leases], [owner, op, id]), 1);

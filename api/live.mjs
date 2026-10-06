@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
-import { configuration } from '../server/security.mjs';
+import { configuration, authorize } from '../server/security.mjs';
 import { attachLiveRelay, LIVE_LIMITS } from '../server/live.mjs';
 
 // Vercel's native WebSocket Functions (Fluid compute / public beta, June 2026).
@@ -16,7 +16,8 @@ export function createLiveServer({ env = process.env, relay = attachLiveRelay } 
     try {
       const config = configuration(env);
       // No access code, provider URL, token or session ID in query strings/logs.
-      if (req.url !== '/api/live' || req.headers.origin !== config.origin) throw Error();
+      if (req.url !== '/api/live') throw Error();
+      authorize(req, config);
       sockets.handleUpgrade(req, socket, head, client => relay(client, req, config));
     } catch {
       socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\nCache-Control: no-store\r\n\r\n');

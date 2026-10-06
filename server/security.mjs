@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 
 export const MAX_BODY_BYTES = 3_000_000;
 export const PROVIDER_TIMEOUT_MS = 55_000;
@@ -17,23 +17,45 @@ export function configuration(env) {
     if (redis.protocol !== 'https:' || !redis.hostname.endsWith('.upstash.io') || redis.username || redis.password || redis.search || redis.hash || redis.pathname !== '/') throw Error();
   } catch { throw unavailable(); }
   // Configuration is server-only. Do not read legacy API_KEY or any VITE_* variable.
-  if (env.AI_ENABLED !== 'true' || !env.GEMINI_API_KEY || !env.UPSTASH_REDIS_REST_TOKEN ||
-      !/^[A-Za-z0-9_-]{32,128}$/.test(env.APP_ACCESS_CODE || '')) throw unavailable();
+  if (env.AI_ENABLED !== 'true' || !env.GEMINI_API_KEY || !env.UPSTASH_REDIS_REST_TOKEN) throw unavailable();
   const daily = Number(env.AI_DAILY_UNITS), lifetime = Number(env.AI_LIFETIME_UNITS);
   if (!Number.isInteger(daily) || daily < 1 || daily > 200 ||
       !Number.isInteger(lifetime) || lifetime < daily || lifetime > 2000) throw unavailable();
   return { origin, redisUrl, redisToken: env.UPSTASH_REDIS_REST_TOKEN,
-    apiKey: env.GEMINI_API_KEY, accessCode: env.APP_ACCESS_CODE, daily, lifetime };
+    apiKey: env.GEMINI_API_KEY, daily, lifetime };
+}
+// Anonymous ownership only: this is not an account or a per-person abuse limit.
+// A caller may create any number of sessions, but cannot reset the global ledger.
+export function sameOrigin(req, config) {
+  if (req.headers.origin !== config.origin ||
+      (req.headers['sec-fetch-site'] && req.headers['sec-fetch-site'] !== 'same-origin')) {
+    throw new HttpError(403, 'この接続元からは利用できません。');
+  }
+}
+const cookieName = config => config.origin.startsWith('https:') ? '__Host-sele-session' : 'sele-local-session';
+function sessionCookie(req, config) {
+  const header = req.headers.cookie;
+  if (header === undefined) return undefined;
+  if (typeof header !== 'string' || header.length > 8192) throw new HttpError(401, 'ブラウザーの接続状態を確認してください。');
+  const matches = header.split(';').map(part => part.trim()).filter(part => part.split('=')[0] === cookieName(config));
+  if (!matches.length) return undefined;
+  const value = matches[0].slice(cookieName(config).length + 1);
+  // No decoding, duplicate cookies or alternate encodings. Reject cookie tossing.
+  if (matches.length !== 1 || !/^[A-Za-z0-9_-]{43}$/.test(value)) throw new HttpError(401, 'ブラウザーの接続状態を確認してください。');
+  return value;
+}
+export function anonymousSession(req, res, config) {
+  sameOrigin(req, config);
+  if (sessionCookie(req, config)) return;
+  const value = randomBytes(32).toString('base64url');
+  const secure = config.origin.startsWith('https:') ? '; Secure' : '';
+  res.setHeader('Set-Cookie', `${cookieName(config)}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400${secure}`);
 }
 export function authorize(req, config) {
-  // Origin is CSRF defense in depth, never a substitute for the access code.
-  if (req.headers.origin !== config.origin) throw new HttpError(403, 'この接続元からは利用できません。');
-  const supplied = req.headers.authorization;
-  const expected = `Bearer ${config.accessCode}`;
-  if (typeof supplied !== 'string' || supplied.length > 160 || !timingSafeEqual(
-    createHash('sha256').update(supplied || '').digest(), createHash('sha256').update(expected).digest())) {
-    throw new HttpError(401, '利用コードを確認してください。');
-  }
+  sameOrigin(req, config);
+  const session = sessionCookie(req, config);
+  if (!session) throw new HttpError(401, 'ブラウザーのCookieを有効にして、もう一度お試しください。');
+  return createHash('sha256').update(session).digest('hex');
 }
 export async function readBody(req) {
   if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) throw new HttpError(415, 'JSON形式で送信してください。');

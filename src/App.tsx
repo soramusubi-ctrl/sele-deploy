@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
-import AiAccess from './components/AiAccess';
 import ImageGenerator from './components/ImageGenerator';
 import ImageEditor from './components/ImageEditor';
 import VideoGenerator from './components/VideoGenerator';
@@ -119,7 +118,6 @@ const App: React.FC = () => {
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
-          <AiAccess />
           {renderContent()}
         </div>
       </main>

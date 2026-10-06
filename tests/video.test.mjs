@@ -7,12 +7,12 @@ import { VIDEO_MODEL, VIDEO_UNITS, VIDEO_CREATE_SCRIPT, VIDEO_STARTED_SCRIPT, VI
   VIDEO_FINISH_POLL_SCRIPT, VIDEO_DOWNLOAD_SCRIPT, videoInput, operationName, downloadUrl } from '../server/video.mjs';
 
 const env = { AI_ENABLED: 'true', APP_ORIGIN: 'https://example.test', GEMINI_API_KEY: 'fake-video-provider-marker',
-  APP_ACCESS_CODE: 'a'.repeat(43), UPSTASH_REDIS_REST_URL: 'https://test.upstash.io',
+  UPSTASH_REDIS_REST_URL: 'https://test.upstash.io',
   UPSTASH_REDIS_REST_TOKEN: 'fake-redis-marker', AI_DAILY_UNITS: '200', AI_LIFETIME_UNITS: '1000' };
 const input = () => ({ action: 'create', requestId: randomUUID(), prompt: 'Wind moves the tree.',
   imageBase64: Buffer.from([137,80,78,71,13,10,26,10]).toString('base64'), mimeType: 'image/png', aspectRatio: '16:9' });
-const request = (body, code = env.APP_ACCESS_CODE) => ({ method: 'POST', headers: {
-  origin: env.APP_ORIGIN, authorization: `Bearer ${code}`, 'content-type': 'application/json' }, body });
+const request = (body, cookie = 'a'.repeat(43)) => ({ method: 'POST', headers: {
+  origin: env.APP_ORIGIN, cookie: `__Host-sele-session=${cookie}`, 'content-type': 'application/json' }, body });
 function response() {
   const res = new EventEmitter();
   Object.assign(res, { headers: {}, chunks: [], statusCode: 0, headersSent: false,
@@ -97,15 +97,15 @@ function harness({ createFailure = false, startSaveFailure = false, missingLedge
     }
     throw Error(`unexpected URL ${url}`);
   };
-  state.call = async (body, customEnv = env, code = customEnv.APP_ACCESS_CODE) => {
+  state.call = async (body, customEnv = env, cookie = 'a'.repeat(43)) => {
     const res = response();
-    await createVideoHandler({ env: customEnv, fetchImpl: state.fetch })(request(body, code), res);
+    await createVideoHandler({ env: customEnv, fetchImpl: state.fetch })(request(body, cookie), res);
     return res;
   };
   return state;
 }
 
-test('video requires access code/origin before store/provider and rejects arbitrary caller fields', async () => {
+test('video requires anonymous cookie/origin before store/provider and rejects arbitrary caller fields', async () => {
   const h = harness();
   assert.equal((await h.call(input(), env, 'wrong')).statusCode, 401);
   const res = response(), req = request(input()); req.headers.origin = 'https://evil.test';
@@ -147,10 +147,9 @@ test('missing ledger and quota exhaustion make zero extra provider creates', asy
   const h = harness(); await h.call(input());
   assert.equal((await h.call(input())).statusCode, 429); assert.equal(h.providerCreates, 1);
 });
-test('job ownership survives instances and changed access codes cannot poll/download another code jobs', async () => {
+test('anonymous browser ownership survives instances and other browsers cannot poll/download jobs', async () => {
   const h = harness(), job = result(await h.call(input()));
-  const other = { ...env, APP_ACCESS_CODE: 'b'.repeat(43) };
-  for (const action of ['status', 'download']) assert.equal((await h.call({ action, jobId: job.jobId }, other)).statusCode, 404);
+  for (const action of ['status', 'download']) assert.equal((await h.call({ action, jobId: job.jobId }, env, 'b'.repeat(43))).statusCode, 404);
   assert.equal(h.providerPolls, 0); assert.equal(h.providerDownloads, 0);
   assert.equal(result(await h.call({ action: 'status', jobId: job.jobId })).status, 'ready');
 });
@@ -184,4 +183,19 @@ test('expired job cannot be recreated by replaying its original idempotency key'
   assert.equal(result(await h.call(body)).jobId, job.jobId);
   assert.equal((await h.call({ action: 'status', jobId: job.jobId })).statusCode, 404);
   assert.equal(h.providerCreates, 1);
+});
+
+test('cookie loss cannot reopen a saved video request or expose its job ID', async () => {
+  const h = harness(), body = input();
+  await h.call(body);
+  const other = await h.call(body, env, 'b'.repeat(43));
+  assert.equal(other.statusCode, 409); assert.equal(result(other).jobId, undefined);
+  assert.equal(h.providerCreates, 1); assert.equal(h.total, VIDEO_UNITS);
+});
+test('new anonymous sessions share the same irreversible global quota', async () => {
+  const h = harness(); await h.call(input());
+  for (const cookie of ['b'.repeat(43), 'c'.repeat(43)]) {
+    assert.equal((await h.call(input(), env, cookie)).statusCode, 429);
+  }
+  assert.equal(h.providerCreates, 1); assert.equal(h.total, VIDEO_UNITS);
 });

@@ -9,11 +9,16 @@ const BASE = 'https://generativelanguage.googleapis.com';
 const LEDGER = 'sele:{ai}:budget', LEASES = 'sele:{ai}:leases', ACTIVE = 'sele:{ai}:video:active';
 const jobKey = id => `sele:{ai}:video:job:${id}`;
 const hash = value => createHash('sha256').update(value).digest('hex');
-const ownerFor = config => hash(config.accessCode);
+const ownerFor = config => {
+  if (!/^[a-f0-9]{64}$/.test(config.owner || '')) throw new HttpError(401, 'ブラウザーの接続状態を確認してください。');
+  return config.owner;
+};
 const unavailable = () => new HttpError(503, '動画の状態を確認できません。自動で再生成せず、管理者に確認してください。');
 const bad = () => { throw new HttpError(400, '動画の入力形式を確認してください。'); };
 const jobIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
+// Global request IDs plus owner-bound fingerprints prevent a lost/replaced cookie
+// from reopening the same uncertain create or exposing another owner's job ID.
 // One transaction creates the idempotency marker, charges the existing lifetime
 // ledger, and records an uncertain job BEFORE any provider attempt. Missing or
 // evicted ledger fails closed. Idempotency tombstones live in that same
@@ -154,10 +159,10 @@ const publicState = (jobId, status) => {
 
 export async function createVideo(input, config, fetchImpl) {
   const owner = ownerFor(config), id = randomUUID();
-  const fingerprint = hash(JSON.stringify([input.prompt, input.imageBase64, input.mimeType, input.aspectRatio]));
+  const fingerprint = hash(JSON.stringify([owner, input.prompt, input.imageBase64, input.mimeType, input.aspectRatio]));
   const result = await evalScript(config, fetchImpl, VIDEO_CREATE_SCRIPT,
     [LEDGER, LEASES, ACTIVE, jobKey(id)],
-    [config.lifetime, config.daily, VIDEO_UNITS, owner, fingerprint, id, `video:${owner}:${input.requestId}`]);
+    [config.lifetime, config.daily, VIDEO_UNITS, owner, fingerprint, id, `video:${input.requestId}`]);
   if (!Array.isArray(result)) throw unavailable();
   if (result[0] === -2) throw new HttpError(409, '同じ受付番号で入力は変更できません。');
   if (result[0] === 0 || result[0] === 3) throw new HttpError(429, '動画の利用上限に達したか、ほかの動画を生成中です。管理者に確認してください。');

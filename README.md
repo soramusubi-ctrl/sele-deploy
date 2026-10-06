@@ -29,10 +29,6 @@ Set these variables **server-side**, separately for each approved environment:
   exposed key as the final mitigation.
 - `APP_ORIGIN`: the exact HTTPS site origin, without trailing slash/path. Local
   testing may use `http://localhost:PORT` or `http://127.0.0.1:PORT`.
-- `APP_ACCESS_CODE`: an operator-generated high-entropy base64url value, 32–128
-  characters. Distribute it only to trusted users through a secure channel. This
-  is an application authorization code, **not** the Gemini key. Never publish it
-  in the bundle, URL, docs or shared storage. The UI retains it in memory only.
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`: an approved persistent
   Upstash Redis database. Only HTTPS `*.upstash.io` URLs are accepted. Disable
   eviction of the budget ledger and restrict Redis access to the server/operator.
@@ -59,11 +55,40 @@ lifetime budget is reached, an operator must review consumption before any chang
 
 ### Bounded spend and trust model
 
-All paid operations authenticate the access code and exact Origin before touching
-Gemini. Origin is CSRF defense, not authentication. This small private app uses a
-shared trusted-user code: it does not claim per-user identity, isolation or
-attribution. Anyone holding that code can consume the shared budget. A public
-multi-user launch needs account authentication and account-level quotas.
+No passphrase, sign-in or user-entered provider key is required. The browser first
+POSTs JSON to `/api/session` and receives a random 256-bit anonymous ownership
+cookie. On HTTPS it is `__Host-sele-session`, with Secure, HttpOnly, SameSite=Strict,
+Path=/, no Domain, and a 24-hour lifetime. Only loopback HTTP development uses an
+unprefixed non-Secure cookie. JavaScript never reads the cookie; no session signing
+secret, account, provider credential or extra service is created.
+
+Every paid REST request and WebSocket upgrade requires the cookie and exact
+Origin; cross-site Fetch Metadata and duplicate/malformed cookies are rejected.
+Origin is CSRF defense, not authentication. The cookie is an unguessable video
+ownership capability, **not a verified person or trusted user**. Any anonymous
+visitor or script can establish a session and consume the shared budget. Clearing
+cookies, opening new browsers, reconnecting Live or changing instances does not
+reset the global daily/lifetime ledger. There is no claim of per-person rate
+limiting. Anonymous budget exhaustion remains an accepted availability risk;
+these changes do not make the endpoint a private service or a complete DDoS defense.
+
+Video jobs use a hash of the ownership cookie. Other anonymous sessions cannot
+poll/download those jobs. Global request IDs with owner-bound fingerprints prevent
+an uncertain create from being billed again after cookie loss. Clearing/expiring
+cookies loses access to existing jobs; the UI fails closed rather than silently
+regenerating. Session storage keeps only pending request/job IDs, never cookies or
+provider credentials. Bootstrap uses Web Locks to serialize first visits across
+tabs where supported; simultaneous first visits in older browsers may replace the
+shared cookie and lose job access, but never reset the global budget. Pending jobs created under the old shared-code version
+cannot be recovered through anonymous sessions. A legacy pending record in the
+same tab blocks new creation until an operator reconciles it. Closing the tab or
+clearing browser storage loses that safeguard; do not re-submit uncertain old jobs.
+
+Removing the access-code UI alone **does not enable AI**. The rotated server-only
+Gemini key, exact origin, approved existing Redis connection, initialized durable
+ledger, explicit budgets and `AI_ENABLED=true` are still required. A missing or
+incorrect server configuration returns 503; missing/corrupt Redis fails closed.
+No Vercel settings, credentials or production deployment are changed by this PR.
 
 Redis Lua atomically reserves both daily and lifetime units before each paid
 attempt, with at most two shared in-flight leases. Browser localStorage counters
@@ -111,7 +136,7 @@ This protects Gemini usage; it is not a complete infrastructure DDoS/WAF defense
   format/redirect behavior, review and update the allowlist before enabling video.
   A lost/ambiguous start is shown as uncertain, never silently retried. Navigating
   away stops browser polling, not an already-submitted provider job.
-- Live audio runs through an authenticated WebSocket relay. The long-lived key
+- Live audio runs through the same-origin anonymous-session WebSocket relay. The long-lived key
   stays on the server; no ephemeral provider credential is issued to browsers.
   The server owns duration, pacing, byte/turn/output limits and tool configuration.
   A user can reconnect explicitly after the visible 45-second limit, subject to
@@ -154,7 +179,7 @@ provider calls as part of automated tests.
 
 ## Required pre-release staging verification
 
-An operator should verify authentication, missing-config denial, budget exhaustion,
+An operator should verify automatic sessions and job isolation, missing-config denial, budget exhaustion,
 concurrent requests, streamed 4K image output, opted-in image preparation,
 generate→analyze/edit/video, uncertain video behavior, allowed MP4 download, and
 Live connect/disconnect/reconnect/drawing in a protected staging environment with

@@ -1,5 +1,5 @@
 import { prepareAiImage } from '../utils/aiImageInput';
-import { getAccessCode } from './aiAccess';
+import { ensureAiSession } from './aiSession';
 
 export interface GuideInfo {
     characterName: string;
@@ -11,13 +11,12 @@ export interface GuideInfo {
 
 type CharacterReference = { name: string; images?: { base64: string; mimeType?: string }[] };
 async function request<T>(body: object): Promise<T> {
-    const code = getAccessCode();
-    if (!code) throw new Error('画面上部で管理者からの利用コードを設定してください。');
+    await ensureAiSession();
     const json = JSON.stringify(body);
     if (new TextEncoder().encode(json).length > 3_000_000) throw new Error('送信する画像が大きすぎます。参照画像を減らすか、小さな画像を選んでください。');
     const response = await fetch('/api/ai', {
         method: 'POST', credentials: 'same-origin', cache: 'no-store',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${code}` },
+        headers: { 'Content-Type': 'application/json' },
         body: json, signal: AbortSignal.timeout(115000),
     });
     let data;
@@ -46,16 +45,15 @@ export const editImage = async (prompt: string, imageBase64: string, mimeType: s
     return request({ operation: 'edit', prompt, imageBase64: image.base64, mimeType: image.mimeType, useProModel });
 };
 
-// The application access code is not a Gemini key; provider URLs, operation names, and keys stay server-side.
+// Provider URLs, operation names and keys stay server-side. Ownership uses an HttpOnly cookie.
 type VideoJob = { jobId: string; status: 'pending' | 'ready' | 'uncertain' | 'failed' | 'expired'; retryAfterMs: number };
 type PendingVideo = { requestId: string; jobId?: string };
 async function videoRequest(body: object, signal?: AbortSignal): Promise<Response> {
-    const code = getAccessCode();
-    if (!code) throw new Error('画面上部で管理者からの利用コードを設定してください。');
+    await ensureAiSession();
     const timeout = AbortSignal.timeout(70000);
     const response = await fetch('/api/video', {
         method: 'POST', credentials: 'same-origin', cache: 'no-store',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${code}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body), signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });
     if (!response.ok) {
@@ -80,11 +78,19 @@ export const generateVideo = async (
     imageBase64 = prepared.base64; mimeType = prepared.mimeType;
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(mimeType)) throw new Error('PNG、JPEG、WebPの画像を選択してください。');
     if (!prompt.trim() || prompt.length > 3000) throw new Error('動画の指示は1〜3000文字で入力してください。');
-    if (!getAccessCode()) throw new Error('画面上部で管理者からの利用コードを設定してください。');
     // Save a request ID before creation so reloads, timeouts, and repeated clicks
     // cannot silently issue a duplicate paid job for this pending input.
-    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify([getAccessCode(), prompt.trim(), imageBase64, mimeType, aspectRatio])));
-    const key = `sele:video:pending:${Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')}`;
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify([prompt.trim(), imageBase64, mimeType, aspectRatio])));
+    const key = `sele:video:pending:v2:${Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')}`;
+    // Legacy records include an access-code-dependent digest and cannot be safely
+    // matched to this input. Never silently create a second paid job during migration.
+    let legacyPending = false;
+    try {
+        for (let i = 0; i < sessionStorage.length; i++) {
+            if (/^sele:video:pending:[a-f0-9]{64}$/.test(sessionStorage.key(i) || '')) legacyPending = true;
+        }
+    } catch { throw new Error('重複課金を防ぐため、ブラウザーのセッション保存を有効にしてから動画を生成してください。'); }
+    if (legacyPending) throw new Error('更新前に受け付けた動画が残っています。重複課金を防ぐため、新しい動画は作成せず管理者に確認してください。');
     let pending: PendingVideo;
     try {
         const saved = sessionStorage.getItem(key);

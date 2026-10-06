@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { getAccessCode } from './services/aiAccess';
+import { ensureAiSession } from './services/aiSession';
 import { generateImage } from './services/geminiService';
 import Card from './components/Card';
 import Button from './components/Button';
@@ -117,8 +117,6 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({ characters }) => {
     const selectedCharacter = characters.find(c => c.id === selectedCharId);
     const handleConnect = async () => {
         if (!selectedCharacter || connectingRef.current || socketRef.current) return;
-        const accessCode = getAccessCode();
-        if (!accessCode) { setStatusMessage('先に利用コードを入力してください。'); return; }
         connectingRef.current = true;
         setIsConnecting(true);
         const version = ++connectionVersion.current;
@@ -133,6 +131,8 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({ characters }) => {
             // Start/resume in this user gesture for Safari's audio policy.
             void inputAudioContextRef.current.resume();
             void outputAudioContextRef.current.resume();
+            await ensureAiSession();
+            if (!current()) return;
             const stream = await navigator.mediaDevices.getUserMedia({ audio: {
                 echoCancellation: true, noiseSuppression: true, autoGainControl: true,
             } });
@@ -148,7 +148,7 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({ characters }) => {
             }, 15_000);
             socket.onopen = () => {
                 if (!current()) { socket.close(); return; }
-                socket.send(JSON.stringify({ type: 'start', accessCode,
+                socket.send(JSON.stringify({ type: 'start',
                     characterName: selectedCharacter.name,
                     otherCharacters: characters.filter(c => c.isActive && c.id !== selectedCharacter.id).map(c => c.name).slice(0, 5),
                     silent,
@@ -218,7 +218,7 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({ characters }) => {
                         duration: '45秒の接続が終了しました。続けるにはもう一度開始してください。',
                         limit: '今回の音声利用上限に達しました。続けるにはもう一度開始してください。',
                         quota: '利用上限または同時接続数に達しました。少し待つか管理者に確認してください。',
-                        auth: '利用コードを確認してください。',
+                        auth: 'ブラウザーの接続状態を確認してください。',
                         slow: '回線が混み合っています。再接続してください。',
                         error: '音声接続に失敗しました。管理者に設定を確認してください。',
                         closed: '音声接続が終了しました。',
@@ -229,7 +229,7 @@ const AgentInterface: React.FC<AgentInterfaceProps> = ({ characters }) => {
             socket.onerror = () => { if (current()) handleDisconnect('音声接続に失敗しました。もう一度お試しください。'); };
             socket.onclose = () => { if (current()) handleDisconnect('音声接続が終了しました。'); };
         } catch {
-            if (current()) handleDisconnect('接続できませんでした。マイクの許可と利用コードを確認してください。');
+            if (current()) handleDisconnect('接続できませんでした。マイクの許可とブラウザーの接続状態を確認してください。');
         }
     };
 
